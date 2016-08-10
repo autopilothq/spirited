@@ -84,7 +84,51 @@ export default class Animation {
   }
 
   get started() {
-    return this.state === started;
+    return this.state !== idle;
+  }
+
+  start() {
+    this.state = started;
+    this.currentIndex = 0;
+    this.currentDuration = void 0;
+    this.startedAt = present();
+    this.lastElapsed = 0;
+    return this;
+  }
+
+  stop() {
+    if (this.state === idle) {
+      return;
+    }
+
+    if (this.options.gracefulStop && this.currentDuration > 0) {
+      this.state = stopping;
+      return;
+    }
+
+    this.state = idle;
+
+    if (typeof this.onCompleteCallback === 'function') {
+      this.onCompleteCallback();
+    }
+  }
+
+  onTick(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('onTick callback must be a function');
+    }
+
+    this.onTickCallback = callback;
+    return this;
+  }
+
+  onComplete(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('onComplete callback must be a function');
+    }
+
+    this.onCompleteCallback = callback;
+    return this;
   }
 
   tween(targetValues, duration = this.defaultDuration) {
@@ -112,6 +156,17 @@ export default class Animation {
     return this;
   }
 
+  /**
+   * Clean up immediately. After destroy the object cannot be used anymore
+   *
+   * @return {undefined}
+   */
+  destroy() {
+    // TODO blank this.onTickCallback (so it cannot be called accidently
+    // TODO stop the animation immediately (ignore gracefulStop))
+  }
+
+
   interpolate({values, duration}, time) {
     const p = time / duration;
 
@@ -121,24 +176,6 @@ export default class Animation {
       );
     });
   }
-
-  start() {
-    this.state = started;
-    this.currentIndex = 0;
-    this.currentDuration = void 0
-    this.startedAt = present();
-    return this;
-  }
-
-  stop() {
-    if (this.options.gracefulStop && this.currentDuration > 0) {
-      this.state = stopping;
-      return;
-    }
-
-    this.state = idle;
-  }
-
 
   tick(now) {
     if (!this.started) {
@@ -156,29 +193,28 @@ export default class Animation {
       return;
     }
 
-    if (this.state === stopping && now - this.startedAt > duration) {
+    const allTweens = this[tweens];
+    const endTime = allTweens[allTweens.length - 1].end;
+    const elapsed = now - this.startedAt;
+    const justLooped = Math.floor(elapsed / endTime) > Math.floor(this.lastElapsed / endTime);
+
+    if (this.state === stopping && justLooped) {
       // This means that our time caused the animation to loop around, we've
       // passed through the start point since the last tick so it's safe to
       // reset to the first tween and then stop.
       this.currentIndex = 0;
-      this.stop();
+      this.currentDuration = 0;
       tween = this[tweens][0];
       duration = 0;
+      this.stop();
     }
 
     this.currentValue = this.interpolate(tween, duration);
     if (typeof this.onTickCallback === 'function') {
       this.onTickCallback(this.currentValue, now);
     }
-  }
 
-  onTick(callback) {
-    if (typeof callback !== 'function') {
-      throw new Error('onTick callback must be a function');
-    }
-
-    this.onTickCallback = callback;
-    return this;
+    this.lastElapsed = elapsed;
   }
 
   timeToDuration(time) {
@@ -191,7 +227,7 @@ export default class Animation {
     let duration = time - this.startedAt;
 
     if (duration >= longestDuration) {
-      if (this.options.loop === false || this.state === stopping) {
+      if (this.options.loop === false) {
         // It's after the animation would have stopped. This isn't an error
         // but there also isn't a valid duration that we can return.
         return void 0;
@@ -221,15 +257,5 @@ export default class Animation {
     }
 
     return [];
-  }
-
-  /**
-   * Clean up immediately. After destroy the object cannot be used anymore
-   *
-   * @return {undefined}
-   */
-  destroy() {
-    // TODO blank this.onTickCallback (so it cannot be called accidently
-    // TODO stop the animation immediately (ignore gracefulStop))
   }
 }

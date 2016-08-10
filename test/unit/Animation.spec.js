@@ -125,14 +125,6 @@ describe('Animation: Running state', () => {
       expect(anim.timeToDuration(startedAt + 200)).to.be.undefined;
       expect(anim.timeToDuration(startedAt + 201)).to.be.undefined;
     });
-
-    it('returns undefined when the time is after a stopping animation\'s duration', function() {
-      anim = startAndStopAnim();
-      expect(anim.timeToDuration(startedAt)).to.eql(0);
-      expect(anim.timeToDuration(startedAt + 100)).to.eql(100);
-      expect(anim.timeToDuration(startedAt + 200)).to.be.undefined;
-      expect(anim.timeToDuration(startedAt + 201)).to.be.undefined;
-    });
   });
 
   describe('tweenAtTime', function() {
@@ -172,16 +164,6 @@ describe('Animation: Running state', () => {
       expect(anim.tweenAtTime(startedAt + 300)).to.eql([secondTween, 1, 100]);
       expect(anim.tweenAtTime(startedAt + 400)).to.eql([firstTween, 0, 0]);
     });
-
-    it('returns an empty array when time is outside a non-looping animation duration', function() {
-      anim = startAndStopAnim();
-      expect(anim.tweenAtTime(startedAt + 90)).to.eql([firstTween, 0, 90]);
-      expect(anim.tweenAtTime(startedAt + 100)).to.eql([secondTween, 1, 100]);
-      expect(anim.tweenAtTime(startedAt + 200)).to.eql([]);
-      expect(anim.tweenAtTime(startedAt + 201)).to.eql([]);
-      expect(anim.tweenAtTime(startedAt + 300)).to.eql([]);
-      expect(anim.tweenAtTime(startedAt + 400)).to.eql([]);
-    });
   });
 
   describe('tick', function() {
@@ -215,34 +197,105 @@ describe('Animation: Running state', () => {
       expect(anim.currentIndex).to.eql(0);
       anim.tick(now + 100);     // trigger tween[1]
       expect(anim.currentIndex).to.eql(1);
-      anim.tick(now + 200);     // comple the animation and return to start tween
+      anim.tick(now + 200);     // complete the animation and return to start tween
       expect(anim.currentIndex).to.eql(0);
     });
 
-    describe('when we complete the final tween', function() {
-      it('resets currentIndex to the initial frame');
-      it('stops the animation when loop is false');
-      it('stops the animation when loop is true but state is stopping');
-    });
-  });
+    it('stops the animation when it completes the final tween and loop is false', function() {
+      const onComplete = sinon.stub();
+      const nonLoopingOptions = Object.assign({}, options, {loop: false});
+      anim = new Animation([1, 2], 100, nonLoopingOptions)
+        .tween([2, 4], 100)
+        .onComplete(onComplete)
+        .start();
+      anim.tick(anim.startedAt + 200);
 
-  describe('stop', function() {
-    it('stops the animation if not options.gracefulStop');
-    it('stops the animation if options.gracefulStop and currentIndex is 0');
-    it('sets the state to stopping if options.gracefulStop and currentIndex is not 0');
+      // The naimation should have stopped on its own
+      expect(onComplete).to.have.been.called;
+      expect(anim.state.toString()).to.eql('Symbol(IDLE)');
+    });
   });
 
   describe('rounding', function() {
     // this.options.round
   });
 
-  // currentDuration
-  // tween
-  // started
-  // interpolate
-  // start
-  // stop
-  // tick
-  // onTick
-  // destroy
+  describe('destroy', function() {
+  });
+});
+
+describe('Animation: Stopping', function() {
+  describe('gracefulStop', function() {
+    let onComplete, anim, startedAt;
+
+    beforeEach(function() {
+      const options = {
+        easing: 'linear',
+        elasticity: 100,
+        gracefulStop: true,
+      };
+
+      onComplete = sinon.stub();
+      anim = new Animation([1, 2], 100, options)
+        .tween([2, 4], 100)
+        .onComplete(onComplete)
+        .start();
+      startedAt = anim.startedAt;
+      anim.tick(startedAt + 200);     // tick back to the first tween
+    });
+
+    it('stops the animation when loop is true but state is stopping', function() {
+      anim.tick(startedAt + 300);     // tick to second tween...
+      anim.stop();
+
+      // We are stopping, but the onComplete callback should not have been
+      // triggered as we need need to reach the first tick again.
+      expect(anim.state.toString()).to.eql('Symbol(STOPPING)');
+      expect(onComplete).to.not.have.been.called;
+
+      // ...and back to first tween again so our callback should trigger.
+      anim.tick(startedAt + 400);
+      expect(onComplete).to.have.been.called;
+      expect(anim.state.toString()).to.eql('Symbol(IDLE)');
+    });
+
+    it('calls the onComplete callback', function() {
+      anim.stop();
+      expect(onComplete).to.have.been.called;
+    });
+
+    it('resets currentIndex to the initial frame', function() {
+      anim.stop();
+      expect(anim.currentIndex).to.eql(0);
+    });
+  });
+
+  describe('stop', function() {
+    let onComplete, anim, startedAt;
+
+    beforeEach(function() {
+      const options = {
+        easing: 'linear',
+        elasticity: 100,
+        gracefulStop: false,
+      };
+
+      onComplete = sinon.stub();
+      anim = new Animation([1, 2], 100, options)
+        .tween([2, 4], 100)
+        .onComplete(onComplete)
+        .start();
+      startedAt = anim.startedAt;
+      anim.tick(startedAt + 50);     // halfway through the first tween
+      anim.stop();
+    });
+
+    it('calls the onComplete callback', function() {
+      expect(onComplete).to.have.been.called;
+    });
+
+    it('resets currentIndex to the initial frame', function() {
+      expect(anim.currentIndex).to.eql(0);
+    });
+  });
 });

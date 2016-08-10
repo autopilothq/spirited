@@ -11,6 +11,7 @@ const moveTo = animate([0, 0], 200, { loop: true, easing: 'easeInOutQuad' })
                   .tween([200, 50]);
 
 // Combining animations
+// Copies the behaviour of animations but not it's state (if it had already been started)
 const shakeNMove = combine(moveTo, shake)
                         .onTick(([x, y], shape) => {
                           shape.bbox.minX = x;
@@ -18,6 +19,7 @@ const shakeNMove = combine(moveTo, shake)
                         });
 
 // Composing animations
+// Copies the behaviour of animations but not it's state (if it had already been started)
 const shakeNMove = compose(moveTo, shake)
                         .onTick((shakeOffset, movePosition, shape) => {
                           shape.bbox.minX = x;
@@ -25,10 +27,15 @@ const shakeNMove = compose(moveTo, shake)
                         });
 
 shapeShaker = shake(shape)
-shapeShaker.start()
+  .onTick((value, time) => { ... })
+  .onComplete(() => { ... })
+  .start()
+
 
 shapeShakeNMove = shakeNMove(shape)
-shapeShakeNMove.start()
+  .onTick((value, time) => { ... })
+  .onComplete(() => { ... })
+  .start()
 
 animate.tick()
 shapeShaker.stop();
