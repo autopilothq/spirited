@@ -10,7 +10,9 @@ function stupidRenderLoop(fn) {
     }
   }
 
-  window.requestAnimationFrame(step);
+  setTimeout(() => {
+    window.requestAnimationFrame(step);
+  }, 100);
 
   return {
     get startedAt() {
