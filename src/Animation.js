@@ -44,6 +44,10 @@ function createTween(start, duration, values) {
  // starts.
 export default class Animation {
   currentIndex = 0;
+  currentValue = [];
+  currentDuration = 0.0;
+  lastElapsed = 0.0;
+  startedAt = 0.0;
   state = idle;
 
   constructor(initialTweenValues, defaultDuration, {easing, elasticity, ...options} = {}) {
@@ -131,6 +135,14 @@ export default class Animation {
     return this;
   }
 
+  get firstTween() {
+    return this[tweens][0];
+  }
+
+  get lastTween() {
+    return this[tweens][this[tweens].length - 1];
+  }
+
   tween(targetValues, duration = this.defaultDuration) {
     if (!isNumberArray(targetValues)) {
       throw new Error('Can only animate arrays of numbers');
@@ -140,15 +152,14 @@ export default class Animation {
       throw new Error('All tweens must have the same number of targets');
     }
 
-    const allTweens = this[tweens];
-    const previousTween = allTweens[allTweens.length - 1];
+    const previousTween = this.lastTween;
     const values = new Array(targetValues.length);
 
     previousTween.values.forEach((prevValue, i) => {
       prevValue[1] = targetValues[i] - prevValue[0];
       values[i] = [
         targetValues[i],
-        allTweens[0].values[i][0] - targetValues[i],
+        this.firstTween.values[i][0] - targetValues[i],
       ];
     });
 
@@ -168,16 +179,14 @@ export default class Animation {
 
 
   interpolate({values, start, duration}, time) {
-    const p = (time - start) / duration;
+    const ease = this.ease((time - start) / duration);
 
     return this.current.values.map(([value, change]) => {
       if (change === 0) {
         return this[maybeRound](value);
       }
 
-      return this[maybeRound](
-        value + change * this.ease(p)
-      );
+      return this[maybeRound](value + change * ease);
     });
   }
 
@@ -197,8 +206,7 @@ export default class Animation {
       return;
     }
 
-    const allTweens = this[tweens];
-    const endTime = allTweens[allTweens.length - 1].end;
+    const endTime = this.lastTween.end;
     const elapsed = now - this.startedAt;
     const justLooped = Math.floor(elapsed / endTime) > Math.floor(this.lastElapsed / endTime);
 
@@ -214,6 +222,7 @@ export default class Animation {
     }
 
     this.currentValue = this.interpolate(tween, duration);
+
     if (typeof this.onTickCallback === 'function') {
       this.onTickCallback(this.currentValue, now);
     }
@@ -227,8 +236,7 @@ export default class Animation {
       throw new Error(msg);
     }
 
-    const allTweens = this[tweens];
-    const longestDuration = allTweens[allTweens.length - 1].end;
+    const longestDuration = this.lastTween.end;
     let duration = time - this.startedAt;
 
     if (duration >= longestDuration) {
