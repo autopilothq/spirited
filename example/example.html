@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Spirited Example 1</title>
+  <meta charset="utf-8">
+
+  <style>
+    #container {
+      border: 1px solid #AAF;
+      height: 400px;
+      position: relative;
+      width: 400px;
+    }
+
+    #widget {
+      background-color: rgba(96, 96, 255, 0.75);
+      height: 50px;
+      left: 175px;
+      position: absolute;
+      top: 175px;
+      width: 50px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <section id='container'>
+    <div id='widget'></div>
+  </section>
+
+  <script src="spirited.js"></script>
+  <script src='stupidRenderLoop.js'></script>
+  <script>
+    const animate = window.animate;
+    const widget = document.getElementById('widget');
+    const bbox = widget.getBoundingClientRect();
+    let s, loop;
+
+    const moveTo = animate([bbox.left, bbox.top], 200, { loop: true, easing: 'easeInOutQuad' })
+                      .tween([bbox.left + 50, bbox.top], 400)
+                      .tween([bbox.left - 50, bbox.top])
+                      .onTick(([left, top]) => {
+                        // console.log('TICK', left, top);
+                        // if (left > 700) debugger;
+                        widget.style.left = left + 'px';
+                        widget.style.top = top + 'px';
+                      })
+                      .onComplete(() => {
+                        console.log('ALL DONE');
+                        loop.stop();
+                      });
+
+    loop = stupidRenderLoop((now) => {
+      if (s === undefined) {
+        console.log('STARTING');
+        moveTo.start();
+        s = true;
+        return;
+      }
+
+      moveTo.tick(now);
+    });
+  </script>
+</body>
+
+</html>

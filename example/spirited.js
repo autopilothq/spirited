@@ -1,0 +1,1 @@
+../dist/spirited.bundle.js
