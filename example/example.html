@@ -42,26 +42,16 @@
                       .tween([bbox.left + 50, bbox.top], 400)
                       .tween([bbox.left - 50, bbox.top])
                       .onTick(([left, top]) => {
-                        // console.log('TICK', left, top);
-                        // if (left > 700) debugger;
                         widget.style.left = left + 'px';
                         widget.style.top = top + 'px';
                       })
                       .onComplete(() => {
                         console.log('ALL DONE');
                         loop.stop();
-                      });
+                      })
+                      .start();
 
-    loop = stupidRenderLoop((now) => {
-      if (s === undefined) {
-        console.log('STARTING');
-        moveTo.start();
-        s = true;
-        return;
-      }
-
-      moveTo.tick(now);
-    });
+    loop = stupidRenderLoop(moveTo.tick.bind(moveTo));
   </script>
 </body>
 
