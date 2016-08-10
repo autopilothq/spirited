@@ -144,11 +144,11 @@ export default class Animation {
     const previousTween = allTweens[allTweens.length - 1];
     const values = new Array(targetValues.length);
 
-    previousTween.values.forEach((value, i) => {
-      value[1] = targetValues[i] - value[0];
+    previousTween.values.forEach((prevValue, i) => {
+      prevValue[1] = targetValues[i] - prevValue[0];
       values[i] = [
         targetValues[i],
-        allTweens[0].values[i][1] - targetValues[i],
+        allTweens[0].values[i][0] - targetValues[i],
       ];
     });
 
@@ -167,12 +167,16 @@ export default class Animation {
   }
 
 
-  interpolate({values, duration}, time) {
-    const p = time / duration;
+  interpolate({values, start, duration}, time) {
+    const p = (time - start) / duration;
 
-    return this.current.values.map(([start, change]) => {
+    return this.current.values.map(([value, change]) => {
+      if (change === 0) {
+        return this[maybeRound](value);
+      }
+
       return this[maybeRound](
-        start + change * this.ease(p)
+        value + change * this.ease(p)
       );
     });
   }
@@ -219,7 +223,8 @@ export default class Animation {
 
   timeToDuration(time) {
     if (this.startedAt !== void 0 && time < this.startedAt) {
-      throw new Error('Cannot find a tween before the animation starts');
+      const msg = `Cannot find a tween before the animation starts: ${time} < ${this.startedAt}`;
+      throw new Error(msg);
     }
 
     const allTweens = this[tweens];

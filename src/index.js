@@ -1,3 +1,4 @@
+import Animation from './Animation';
 
 /*
 import { default as animatem compose, combine } from 'animate';
@@ -50,12 +51,15 @@ shapeShaker.tick(time);     // <== private API
  * @param  {[type]} options =             {} [description]
  * @return {Animation}         [description]
  */
-export default (initialTweenValues, defaultDuration, options = {}) => {
-  console.error('TODO: Animate', initialTweenValues, defaultDuration, options);
-  // Create the new Animation
-  // Push it into the animations list
-  // return it
+const animate = (initialTweenValues, defaultDuration, options = {}) => {
+  const anim = new Animation(initialTweenValues, defaultDuration, options);
+
+  // TODO: Push it into the animations list
+
+  return anim;
 };
+
+export default animate;
 
 export const compose = (...animations) => {
   console.error('TODO: COMPOSE', animations);
@@ -64,3 +68,9 @@ export const compose = (...animations) => {
 export const combine = (...animations) => {
   console.error('TODO: COMBINE', animations);
 };
+
+
+if (window) {
+  // Ugly temp hack for testing some stuff
+  window.animate = animate;
+}
