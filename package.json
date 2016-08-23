@@ -14,7 +14,8 @@
     "test:watch": "npm run test -- -w",
     "build-browser-tests": "webpack -d --config webpack.tests.config.js",
     "build-browser-tests:watch": "npm run build-browser-tests -- --watch",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "start": "http-server example/ -c-1"
   },
   "repository": {
     "type": "git",

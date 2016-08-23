@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Spirited Example 1</title>
+  <title>Spirited Example: Simple</title>
   <meta charset="utf-8">
 
   <style>
@@ -31,19 +31,22 @@
   </section>
 
   <script src="spirited.js"></script>
-  <script src='stupidRenderLoop.js'></script>
+  <script src='util/stupidRenderLoop.js'></script>
+  <script src='util/helpers.js'></script>
   <script>
     const animate = window.animate;
     const widget = document.getElementById('widget');
-    const bbox = widget.getBoundingClientRect();
+    const container = document.getElementById('container');
+    const [startLeft, startTop] = getRelativePos(widget, container);
     let s, loop;
 
-    const moveTo = animate([bbox.left, bbox.top], 200, { loop: true, easing: 'easeInOutQuad' })
-                      .tween([bbox.left + 50, bbox.top], 400)
-                      .tween([bbox.left - 50, bbox.top])
+    const moveTo = animate([startLeft], 200, { loop: true, easing: 'easeInOutQuad' })
+                      .tween([startLeft + 50], 400)
+                      .tween([startLeft - 50])
+
+    const playback = moveTo.playback()
                       .onTick(([left, top]) => {
                         widget.style.left = left + 'px';
-                        widget.style.top = top + 'px';
                       })
                       .onComplete(() => {
                         console.log('ALL DONE');
@@ -51,7 +54,7 @@
                       })
                       .start();
 
-    loop = stupidRenderLoop(moveTo.tick.bind(moveTo));
+    loop = stupidRenderLoop(playback.tick.bind(playback));
   </script>
 </body>
 

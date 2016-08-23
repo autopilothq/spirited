@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Spirited Example: Combine</title>
+  <meta charset="utf-8">
+
+  <style>
+    #container {
+      border: 1px solid #AAF;
+      height: 500px;
+      position: relative;
+      width: 500px;
+    }
+
+    #widget {
+      background-color: rgba(96, 96, 255, 0.75);
+      height: 50px;
+      left: 175px;
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      top: 50px;
+      width: 50px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <section id='container'>
+    <div id='widget'></div>
+  </section>
+
+  <script src="spirited.js"></script>
+  <script src='util/stupidRenderLoop.js'></script>
+  <script src='util/helpers.js'></script>
+  <script>
+    const animate = window.animate;
+    const combine = window.combine;
+    const widget = document.getElementById('widget');
+    const container = document.getElementById('container');
+    const [startLeft, startTop] = getRelativePos(widget, container);
+    let s, loop;
+
+
+    const shake = animate([0], 150, { loop: true, easing: 'linear' })
+                      .tween([10], 300)
+                      .tween([-10], 150);
+
+    const moveTo = animate([startLeft, startTop], 2000, { loop: true, easing: 'easeInOutQuad' })
+                      .tween([startLeft, startTop + 300], 2000)
+
+
+    const shakeNMove = combine(moveTo, shake);
+
+    const anim = shakeNMove(widget)
+                    .onTick((left, top) => {
+                      widget.style.left = left + 'px';
+                      widget.style.top = top + 'px';
+                    })
+                    .onComplete(() => {
+                      console.log('ALL DONE');
+                      loop.stop();
+                    })
+                    .start();
+
+    loop = stupidRenderLoop(anim.tick.bind(anim));
+
+    // setTimeout(() => {
+    //   anim.stop();
+    // }, 3000);
+  </script>
+</body>
+
+</html>

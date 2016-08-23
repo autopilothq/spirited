@@ -1,54 +1,64 @@
-import present from 'present';
+import Playback from './Playback';
+import PlaybackGroup from './PlaybackGroup';
 import createEaser from './createEaser.js';
+import createTween from './createTween.js';
 import defaultOptions from './defaultOptions.js';
-
-// Animation states
-const started = Symbol('STARTED');
-const stopping = Symbol('STOPPING');
-const idle = Symbol('IDLE');
+import {isNumberArray} from './validation.js';
 
 // Private symbols
-const tweens = Symbol('TWEENS');
 const maybeRound = Symbol('MAYBEROUND');
 
-const isNumber = (obj) => typeof obj === 'number';
-const isNumberArray = (obj) => Array.isArray(obj) && obj.every(isNumber);
-const identityFn = function(value) {
-  return value;
-};
-
-function createTween(start, duration, values) {
-  return {
-    start,
-    end: start + duration,
-    duration,
-    values,
-  };
-}
+const identityFn = value => value;
 
 
 /**
- * Animation object. This is used by the animate function, user's don't manually
- * instantiate it, hence it's private.
+ * This represents an abstract definition of a animation. It can be used to define
+ * an particular animation one, which can then be use many times by creating multiple
+ * Playback objects from it.
+ *
+ * This is used by the animate function, user's don't manually instantiate it,
+ * hence it's private.
+ *
+ * @TODO docs
+ *
+ * tween value format is:
+ * * value at duration 0 of the tween
+ * * difference between this value and the next tweens (delta value)
+ * * previous tweens duration
+ * * current tweens duration
+ * Note: durations are measured from time 0, which is when the first tween
+ * starts.
  *
  * @constructor
  * @private
  *
  */
- // tween value format is:
- // * value at duration 0 of the tween
- // * difference between this value and the next tweens (delta value)
- // * previous tweens duration
- // * current tweens duration
- // Note: durations are measured from time 0, which is when the first tween
- // starts.
 export default class Animation {
-  currentIndex = 0;
-  currentValue = [];
-  currentDuration = 0.0;
-  lastElapsed = 0.0;
-  startedAt = 0.0;
-  state = idle;
+  tweens = [];
+
+  /**
+   * Returns a function that groups the desires animations together using aggregationMethod
+   * The function can be called to generate a playback group for all of the animations.
+   *
+   * @param  {[type]} animations        [description]
+   * @param  {[type]} aggregationMethod [description]
+   * @return {[type]}                   [description]
+   */
+  static group(animations, aggregationMethod) {
+    // The last arg will actually be a the aggregationMethod, which is a string.
+    // It is required so let's throw an error if it's omitted.
+    // The signature of this method ends up being a little weird because JS
+    // doesn't support left variadic groups, if it did then we could just
+    // say:  group(...animations, aggregationMethod)
+    //
+    if (typeof aggregationMethod !== 'string') {
+      throw new Error('You must provide an aggregation method for the group');
+    }
+
+    return (...entities) => {
+      return new PlaybackGroup(animations, entities, aggregationMethod);
+    };
+  }
 
   constructor(initialTweenValues, defaultDuration, {easing, elasticity, ...options} = {}) {
     if (!isNumberArray(initialTweenValues)) {
@@ -68,10 +78,11 @@ export default class Animation {
     this.options = Object.freeze(Object.assign({}, defaultOptions, options));
     this.ease = createEaser(easing, elasticity);
 
-    const valuesAndDurations = initialTweenValues.map(value => [value, void 0]);
-    this[tweens] = [
-      createTween(0, defaultDuration, valuesAndDurations),
-    ];
+    // Usually the tween values are actuall pairs of [value, deltaToTheNextValue]
+    // we can't calculate the delta initially though, as we only have a single
+    // tween.
+    const tweenValues = initialTweenValues.map(value => [value]);
+    this.tweens.push(createTween(0, defaultDuration, tweenValues));
 
     // Maybe this a private helper, it get's used in interpolate
     this[maybeRound] = (() => {
@@ -83,72 +94,26 @@ export default class Animation {
     })();
   }
 
-  get current() {
-    return this[tweens][this.currentIndex];
-  }
-
-  get started() {
-    return this.state !== idle;
-  }
-
-  start() {
-    this.state = started;
-    this.currentIndex = 0;
-    this.currentDuration = void 0;
-    this.startedAt = present();
-    this.lastElapsed = 0;
-    return this;
-  }
-
-  stop() {
-    if (this.state === idle) {
-      return;
-    }
-
-    if (this.options.gracefulStop && this.currentDuration > 0) {
-      this.state = stopping;
-      return;
-    }
-
-    this.state = idle;
-
-    if (typeof this.onCompleteCallback === 'function') {
-      this.onCompleteCallback();
-    }
-  }
-
-  onTick(callback) {
-    if (typeof callback !== 'function') {
-      throw new Error('onTick callback must be a function');
-    }
-
-    this.onTickCallback = callback;
-    return this;
-  }
-
-  onComplete(callback) {
-    if (typeof callback !== 'function') {
-      throw new Error('onComplete callback must be a function');
-    }
-
-    this.onCompleteCallback = callback;
-    return this;
-  }
-
-  get firstTween() {
-    return this[tweens][0];
-  }
-
+  /**
+   * [lastTween description]
+   * @return {[type]} [description]
+   */
   get lastTween() {
-    return this[tweens][this[tweens].length - 1];
+    return this.tweens[this.tweens.length - 1];
   }
 
+  /**
+   * [tween description]
+   * @param  {[type]} targetValues                    [description]
+   * @param  {[type]} [duration=this.defaultDuration] [description]
+   * @return {[type]}                                 [description]
+   */
   tween(targetValues, duration = this.defaultDuration) {
     if (!isNumberArray(targetValues)) {
       throw new Error('Can only animate arrays of numbers');
     }
 
-    if (this[tweens][0].values.length !== targetValues.length) {
+    if (this.tweens[0].values.length !== targetValues.length) {
       throw new Error('All tweens must have the same number of targets');
     }
 
@@ -159,116 +124,108 @@ export default class Animation {
       prevValue[1] = targetValues[i] - prevValue[0];
       values[i] = [
         targetValues[i],
-        this.firstTween.values[i][0] - targetValues[i],
+        this.tweens[0].values[i][0] - targetValues[i],
       ];
     });
 
-    this[tweens].push(createTween(previousTween.end, duration, values));
+    this.tweens.push(createTween(previousTween.end, duration, values));
     return this;
   }
 
   /**
-   * Clean up immediately. After destroy the object cannot be used anymore
-   *
-   * @return {undefined}
+   * [playback description]
+   * @param  {[type]} entities [description]
+   * @return {[type]}          [description]
    */
-  destroy() {
-    // TODO blank this.onTickCallback (so it cannot be called accidently
-    // TODO stop the animation immediately (ignore gracefulStop))
+  playback(...entities) {
+    return new Playback(this, ...entities);
   }
 
-
-  interpolate({values, start, duration}, time) {
-    const ease = this.ease((time - start) / duration);
-
-    return this.current.values.map(([value, change]) => {
-      if (change === 0) {
-        return this[maybeRound](value);
-      }
-
-      return this[maybeRound](value + change * ease);
-    });
-  }
-
-  tick(now) {
-    if (!this.started) {
-      return;
-    }
-
-    let [tween, index, duration] = this.tweenAtTime(now);
-    this.currentIndex = index;
-    this.currentDuration = duration;
-
-    if (tween === void 0) {
-      // If we couldn't find a tween for this time, but the animation is started,
-      // then it means that the animation has just completed.
-      this.stop();
-      return;
-    }
-
-    const endTime = this.lastTween.end;
-    const elapsed = now - this.startedAt;
-    const justLooped = Math.floor(elapsed / endTime) > Math.floor(this.lastElapsed / endTime);
-
-    if (this.state === stopping && justLooped) {
-      // This means that our time caused the animation to loop around, we've
-      // passed through the start point since the last tick so it's safe to
-      // reset to the first tween and then stop.
-      this.currentIndex = 0;
-      this.currentDuration = 0;
-      tween = this[tweens][0];
-      duration = 0;
-      this.stop();
-    }
-
-    this.currentValue = this.interpolate(tween, duration);
-
-    if (typeof this.onTickCallback === 'function') {
-      this.onTickCallback(this.currentValue, now);
-    }
-
-    this.lastElapsed = elapsed;
-  }
-
-  timeToDuration(time) {
-    if (this.startedAt !== void 0 && time < this.startedAt) {
-      const msg = `Cannot find a tween before the animation starts: ${time} < ${this.startedAt}`;
+  /**
+   * [elapsedToDuration description]
+   * @param  {Number} [elapsedTime=0] [description]
+   * @return {[type]}                 [description]
+   */
+  elapsedToDuration(elapsedTime = 0) {
+    if (elapsedTime < 0) {
+      const msg = `Cannot find a tween before the animation starts: ${elapsedTime} < 0`;
       throw new Error(msg);
     }
 
-    const longestDuration = this.lastTween.end;
-    let duration = time - this.startedAt;
+    const endTime = this.lastTween.end;
+    let duration = elapsedTime;
 
-    if (duration >= longestDuration) {
+    if (duration >= endTime) {
       if (this.options.loop === false) {
         // It's after the animation would have stopped. This isn't an error
         // but there also isn't a valid duration that we can return.
         return void 0;
       }
 
-      duration %= longestDuration;
+      duration %= endTime;
     }
 
     return duration;
   }
 
+  /**
+   * [tweenAtTime description]
+   * @param  {[type]} elapsedTime [description]
+   * @return {[type]}             [description]
+   */
+  tweenAtTime(elapsedTime) {
+    // Calculate how far through the animation we are, taking into account looping.
+    const duration = this.elapsedToDuration(elapsedTime);
+    const allTweens = this.tweens;
 
-  tweenAtTime(time) {
-    const duration = this.timeToDuration(time);
-
-    // Matches the start tween
-    if (duration >= this[tweens][0].start && duration < this[tweens][0].end) {
-      return [this[tweens][0], 0, duration];
+    if (duration === void 0) {
+      // The animation has stopped, there is no tween
+      return [];
     }
 
-    const allTweens = this[tweens];
+    // Matches the start tween
+    if (duration >= allTweens[0].start && duration < allTweens[0].end) {
+      return [allTweens[0], duration];
+    }
+
     for (let i = 1; i < allTweens.length; ++i) {
       const tween = allTweens[i];
       if (duration >= tween.start && duration < tween.end) {
-        return [tween, i, duration];
+        return [tween, duration];
       }
     }
 
     return [];
+  }
+
+  /**
+   * [interpolate description]
+   * @param  {[type]} tween [description]
+   * @param  {[type]} time  [description]
+   * @return {[type]}       [description]
+   */
+  interpolate(tween, time) {
+    const {values, start, duration} = tween;
+    const ease = this.ease((time - start) / duration);
+    const maybeRoundFn = this[maybeRound];
+    return values.map(([value, change]) => maybeRoundFn(value + change * ease));
+  }
+
+  /**
+   * [atTime description]
+   * @param  {[type]} elapsedTime [description]
+   * @return {[type]}             [description]
+   */
+  atTime(elapsedTime) {
+    const [tween, duration] = this.tweenAtTime(elapsedTime);
+
+    if (!tween) {
+      return [];
+    }
+
+    return [
+      this.interpolate(tween, duration),
+      duration,
+    ];
   }
 }

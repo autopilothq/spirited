@@ -44,6 +44,7 @@ shapeShaker.destroy();
 shapeShaker.tick(time);     // <== private API
 */
 
+
 /**
  * [default description]
  * @param  {Array} initialTweenValues [description]
@@ -51,26 +52,33 @@ shapeShaker.tick(time);     // <== private API
  * @param  {[type]} options =             {} [description]
  * @return {Animation}         [description]
  */
-const animate = (initialTweenValues, defaultDuration, options = {}) => {
-  const anim = new Animation(initialTweenValues, defaultDuration, options);
+export const animate = (initialTweenValues, defaultDuration, options = {}) => {
+  return new Animation(initialTweenValues, defaultDuration, options);
+};
 
-  // TODO: Push it into the animations list
+/**
+ * [description]
+ * @param  {[type]} animations [description]
+ * @return {[type]}            [description]
+ */
+export const compose = (...animations) => {
+  return Animation.group(animations, 'compose');
+};
 
-  return anim;
+/**
+ * [description]
+ * @param  {[type]} animations [description]
+ * @return {[type]}            [description]
+ */
+export const combine = (...animations) => {
+  return Animation.group(animations, 'combine');
 };
 
 export default animate;
 
-export const compose = (...animations) => {
-  console.error('TODO: COMPOSE', animations);
-};
-
-export const combine = (...animations) => {
-  console.error('TODO: COMBINE', animations);
-};
-
-
 if (window) {
   // Ugly temp hack for testing some stuff
+  window.combine = combine;
+  window.compose = compose;
   window.animate = animate;
 }

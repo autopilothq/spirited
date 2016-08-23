@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Spirited Example: Compose</title>
+  <meta charset="utf-8">
+
+  <style>
+    #container {
+      border: 1px solid #AAF;
+      height: 500px;
+      position: relative;
+      width: 500px;
+    }
+
+    #widget {
+      background-color: rgba(96, 96, 255, 0.75);
+      border-radius: 0px;
+      height: 50px;
+      left: 175px;
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      top: 50px;
+      width: 50px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <section id='container'>
+    <div id='widget'></div>
+  </section>
+
+  <script src="spirited.js"></script>
+  <script src='util/stupidRenderLoop.js'></script>
+  <script src='util/helpers.js'></script>
+  <script>
+    const animate = window.animate;
+    const compose = window.compose;
+    const widget = document.getElementById('widget');
+    const container = document.getElementById('container');
+    const [startLeft, startTop] = getRelativePos(widget, container);
+    let s, loop;
+
+
+    const borderRadius = animate([0], 300, { loop: true, easing: 'linear' })
+                          .tween([10], 300)
+
+    const moveTo = animate([startLeft, startTop], 2000, { loop: true, easing: 'easeInOutQuad' })
+                      .tween([startLeft, startTop + 300], 2000)
+
+
+    const shakeNMove = compose(moveTo, borderRadius);
+
+    const anim = shakeNMove(widget)
+                    .onTick(([top, left], borderRadius) => {
+                      console.log(top, left, borderRadius);
+                      widget.style.left = left + 'px';
+                      widget.style.top = top + 'px';
+                      widget.style.borderRadius = borderRadius + 'px';
+                    })
+                    .onComplete(() => {
+                      console.log('ALL DONE');
+                      loop.stop();
+                    })
+                    .start();
+
+    loop = stupidRenderLoop(anim.tick.bind(anim));
+
+    setTimeout(() => {
+      anim.stop();
+    }, 500);
+  </script>
+</body>
+
+</html>
