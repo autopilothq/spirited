@@ -47,7 +47,7 @@ describe('Playback: Running state', () => {
 
   describe('tick', function() {
     it('does nothing if the playback is not started', function() {
-      playback.stop();
+      playback = new Playback(anim, entity).onTick(onTick);
       playback.tick(now);
       expect(onTick).not.to.have.been.called;
     });
@@ -139,7 +139,6 @@ describe('Playback: Stopping', function() {
       expect(playback.state.toString()).to.eql('Symbol(IDLE)');
       expect(onComplete).to.have.been.called;
       expect(playback.currentValue).to.eql([]);
-      expect(playback.currentDuration).to.eql(0.0);
     });
   });
 
@@ -174,11 +173,6 @@ describe('Playback: Stopping', function() {
 
     it('resets currentValue to undefined', function() {
       expect(playback.currentValue).to.eql([]);
-      expect(playback.currentDuration).to.eql(0.0);
-    });
-
-    it('resets currentDuration to 0.0', function() {
-      expect(playback.currentDuration).to.eql(0.0);
     });
   });
 });

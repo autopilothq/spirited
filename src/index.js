@@ -1,4 +1,26 @@
-import Animation from './Animation';
+import Animation from './Animation.js';
+import AnimationGroup from './AnimationGroup.js';
+import Playback from './Playback.js';
+
+/**
+ * Returns a function that groups the desires animations together using aggregationMethod
+ * The function can be called to generate a playback group for all of the animations.
+ *
+ * @param  {Array} animations         [description]
+ * @param  {String} aggregationMethod [description]
+ * @return {Playback}                 [description]
+ */
+const makePlaybackGroup = (animations, aggregationMethod) => {
+  if (typeof aggregationMethod !== 'string') {
+    throw new Error('You must provide an aggregation method for the group');
+  }
+
+  return (...entities) => {
+    const animGroup = new AnimationGroup(animations, {aggregationMethod});
+    return Playback.create(animGroup, entities);
+  };
+};
+
 
 /*
 import { default as animatem compose, combine } from 'animate';
@@ -58,11 +80,21 @@ export const animate = (initialTweenValues, defaultDuration, options = {}) => {
 
 /**
  * [description]
+ * @param  {Array} animations        [description]
+ * @param  {String} aggregationMethod [description]
+ * @return {AnimationGroup}         [description]
+ */
+export const group = (animations, aggregationMethod) => {
+  return new AnimationGroup(animations, {aggregationMethod});
+};
+
+/**
+ * [description]
  * @param  {[type]} animations [description]
  * @return {[type]}            [description]
  */
 export const compose = (...animations) => {
-  return Animation.group(animations, 'compose');
+  return makePlaybackGroup(animations, 'compose');
 };
 
 /**
@@ -71,7 +103,7 @@ export const compose = (...animations) => {
  * @return {[type]}            [description]
  */
 export const combine = (...animations) => {
-  return Animation.group(animations, 'combine');
+  return makePlaybackGroup(animations, 'combine');
 };
 
 export default animate;

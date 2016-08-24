@@ -19,21 +19,30 @@ const idle = Symbol('IDLE');
  */
 export default class Playback {
   currentValue = void 0;
-  currentDuration = 0.0;
   lastElapsed = 0.0;
   startedAt = 0.0;
   state = idle;
   onCompleteCallbacks = [];
   onTickCallbacks = [];
 
-  constructor(animation, ...entities) {
+  /**
+   * [create description]
+   * @param  {Array} animation [description]
+   * @param  {Array} entities  [description]
+   * @return {Playback}           [description]
+   */
+  static create(animation, entities) {
+    return new Playback(this, entities);
+  }
+
+  constructor(animation, entities) {
     this.animation = animation;
     this.entities = entities;
   }
 
   /**
    * [started description]
-   * @return {[type]} [description]
+   * @return {boolean} True if the animation is running, false otherwise
    */
   get started() {
     return this.state !== idle;
@@ -41,7 +50,8 @@ export default class Playback {
 
   /**
    * [stopping description]
-   * @return {[type]} [description]
+   * @return {boolean} True if the animation is stopping, i.e. will stop the next
+   *                        time that it loops.
    */
   get stopping() {
     return this.state === stopping;
@@ -49,7 +59,7 @@ export default class Playback {
 
   /**
    * [start description]
-   * @return {[type]} [description]
+   * @return {Playback} The Playback object
    */
   start() {
     if (this.state !== idle) {
@@ -57,7 +67,6 @@ export default class Playback {
     }
 
     this.state = started;
-    this.currentDuration = 0.0;
     this.startedAt = present();
     this.lastElapsed = 0;
     return this;
@@ -65,21 +74,21 @@ export default class Playback {
 
   /**
    * [stop description]
-   * @return {[type]} [description]
+   * @param {boolean} ignoreGraceful [description]
+   * @return {Playback} The Playback object
    */
-  stop() {
+  stop(ignoreGraceful = false) {
     if (this.state === idle) {
       return this;
     }
 
-    if (this.animation.options.gracefulStop && this.currentDuration > 0) {
+    if (!ignoreGraceful && this.animation.options.gracefulStop) {
       this.state = stopping;
       return this;
     }
 
     this.state = idle;
     this.currentValue = [];
-    this.currentDuration = 0.0;
 
     if (this.onCompleteCallbacks.length) {
       for (const callback of this.onCompleteCallbacks) {
@@ -93,7 +102,7 @@ export default class Playback {
   /**
    * [onTick description]
    * @param  {Function} callback [description]
-   * @return {[type]}            [description]
+   * @return {Playback} The Playback object
    */
   onTick(callback) {
     if (typeof callback !== 'function') {
@@ -107,7 +116,7 @@ export default class Playback {
   /**
    * [onComplete description]
    * @param  {Function} callback [description]
-   * @return {[type]}            [description]
+   * @return {Playback} The Playback object
    */
   onComplete(callback) {
     if (typeof callback !== 'function') {
@@ -149,18 +158,16 @@ export default class Playback {
       // passed through the start point since the last tick so it's safe to
       // reset to the first tween and then stop.
       this.currentValue = void 0;
-      this.currentDuration = 0.0;
     } else {
-      let [value, duration] = this.animation.atTime(elapsed);
-      this.currentDuration = duration;
-      this.currentValue = value;
+      this.currentValue = this.animation.atTime(elapsed);
     }
 
     if (this.currentValue === void 0) {
       // If we couldn't find a tween for this time, but the animation is started,
-      // then it means that the animation has just completed.
-      this.stop();
-    } else if (this.onTickCallbacks.length) {
+      // then it means that the animation has just completed, or it was already
+      // stopping and it just looped.
+      this.stop(true);
+    } else {
       for (const callback of this.onTickCallbacks) {
         callback(this.currentValue, now);
       }

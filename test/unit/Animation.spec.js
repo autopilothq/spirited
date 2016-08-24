@@ -33,7 +33,7 @@ describe('Animation', function() {
   it('makes defaultDuration readonly', function() {
     const prop = Object.getOwnPropertyDescriptor(anim, 'defaultDuration');
     expect(prop.set).to.be.undefined;
-    expect(prop.get).to.not.be.undefined;
+    expect(prop.value).to.not.be.undefined;
   });
 
   it('makes options constant', function() {
@@ -142,9 +142,7 @@ describe('Animation', function() {
 
     beforeEach(function() {
       interpolate = sinon.spy(anim, 'interpolate');
-      tweenAtTime = sinon.stub(anim, 'tweenAtTime', () => {
-        return [firstTween, 50];
-      });
+      tweenAtTime = sinon.stub(anim, 'tweenAtTime', () => [firstTween, 50]);
       anim.atTime(50);
     });
 
@@ -163,10 +161,6 @@ describe('Animation', function() {
   });
 
   describe('playback', function() {
-    // this.options.round
-  });
-
-  describe('grouping', function() {
     // this.options.round
   });
 });

@@ -1,5 +1,4 @@
 import Playback from './Playback';
-import PlaybackGroup from './PlaybackGroup';
 import createEaser from './createEaser.js';
 import createTween from './createTween.js';
 import defaultOptions from './defaultOptions.js';
@@ -36,30 +35,6 @@ const identityFn = value => value;
 export default class Animation {
   tweens = [];
 
-  /**
-   * Returns a function that groups the desires animations together using aggregationMethod
-   * The function can be called to generate a playback group for all of the animations.
-   *
-   * @param  {[type]} animations        [description]
-   * @param  {[type]} aggregationMethod [description]
-   * @return {[type]}                   [description]
-   */
-  static group(animations, aggregationMethod) {
-    // The last arg will actually be a the aggregationMethod, which is a string.
-    // It is required so let's throw an error if it's omitted.
-    // The signature of this method ends up being a little weird because JS
-    // doesn't support left variadic groups, if it did then we could just
-    // say:  group(...animations, aggregationMethod)
-    //
-    if (typeof aggregationMethod !== 'string') {
-      throw new Error('You must provide an aggregation method for the group');
-    }
-
-    return (...entities) => {
-      return new PlaybackGroup(animations, entities, aggregationMethod);
-    };
-  }
-
   constructor(initialTweenValues, defaultDuration, {easing, elasticity, ...options} = {}) {
     if (!isNumberArray(initialTweenValues)) {
       throw new Error('You must provide initialTweenValues as an array of numbers');
@@ -71,7 +46,7 @@ export default class Animation {
 
     // Readonly for safety
     Object.defineProperty(this, 'defaultDuration', {
-      get: () => defaultDuration,
+      value: defaultDuration,
     });
 
     // Note: consider these constant after they're set
@@ -134,10 +109,10 @@ export default class Animation {
 
   /**
    * [playback description]
-   * @param  {[type]} entities [description]
-   * @return {[type]}          [description]
+   * @param  {Array} entities [description]
+   * @return {Playback}          [description]
    */
-  playback(...entities) {
+  playback(entities) {
     return new Playback(this, ...entities);
   }
 
@@ -220,12 +195,9 @@ export default class Animation {
     const [tween, duration] = this.tweenAtTime(elapsedTime);
 
     if (!tween) {
-      return [];
+      return void 0;
     }
 
-    return [
-      this.interpolate(tween, duration),
-      duration,
-    ];
+    return this.interpolate(tween, duration);
   }
 }
