@@ -63,7 +63,7 @@
                       console.log('ALL DONE');
                       loop.stop();
                     })
-                    .start();
+                    .start(performance.now());
 
     loop = stupidRenderLoop(anim.tick.bind(anim));
 

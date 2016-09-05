@@ -1,4 +1,3 @@
-import present from 'present';
 import defaultOptions from './defaultOptions.js';
 
 // Animation states
@@ -62,23 +61,26 @@ export default class Playback {
   }
 
   /**
-   * [start description]
+   * Begin playback
+   *
+   * @param  {Number} now [description]
    * @return {Playback} The Playback object
    */
-  start() {
+  start(now) {
     if (this.state !== idle) {
       throw new Error('Playback has already started');
     }
 
     this.state = started;
-    this.startedAt = present();
+    this.startedAt = now;
     this.lastElapsed = 0;
     return this;
   }
 
   /**
-   * [stop description]
-   * @param {boolean} ignoreGraceful [description]
+   * End playback.
+   *
+   * @param {boolean} [ignoreGraceful=false] [description]
    * @return {Playback} The Playback object
    */
   stop(ignoreGraceful = false) {

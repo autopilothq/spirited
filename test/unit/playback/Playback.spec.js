@@ -1,3 +1,4 @@
+import present from 'present';
 import sinon from 'sinon';
 import Playback from '../../../src/playback/Playback.js';
 import Animation from '../../../src/animation/Animation.js';
@@ -27,11 +28,12 @@ describe('Playback: Running state', () => {
     anim = new Animation([1, 2], 100, options)
       .tween([2, 4], 100);
 
+    now = present();
+
     playback = new Playback(anim, entity)
       .onTick(onTick)
-      .start();
+      .start(now);
 
-    now = playback.startedAt;
   });
 
   describe('tick', function() {
@@ -66,9 +68,11 @@ describe('Playback: Running state', () => {
       anim = new Animation([1, 2], 100, nonLoopingOptions)
         .tween([2, 4], 100);
 
+      now = present();
+
       playback = new Playback(anim, entity)
         .onComplete(onComplete)
-        .start();
+        .start(now);
 
       playback.tick(playback.startedAt + 200);
 
@@ -105,12 +109,12 @@ describe('Playback: Stopping', function() {
     beforeEach(function() {
       onComplete = sinon.stub();
       entity = sinon.spy();
+      startedAt = present();
 
       playback = new Playback(anim, entity, {gracefulStop: true})
         .onComplete(onComplete)
-        .start();
+        .start(startedAt);
 
-      startedAt = playback.startedAt;
       playback.tick(startedAt + 300);     // tick to second tween...
       playback.stop();                    // playback should be stopping rather than idle
     });
@@ -140,12 +144,12 @@ describe('Playback: Stopping', function() {
     beforeEach(function() {
       onComplete = sinon.stub();
       entity = sinon.spy();
+      startedAt = present();
 
       playback = new Playback(anim, entity, {gracefulStop: false})
         .onComplete(onComplete)
-        .start();
+        .start(startedAt);
 
-      startedAt = playback.startedAt;
       playback.tick(startedAt + 50);     // halfway through the first tween
       playback.stop();
     });

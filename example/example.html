@@ -52,7 +52,7 @@
                         console.log('ALL DONE');
                         loop.stop();
                       })
-                      .start();
+                      .start(performance.now());
 
     loop = stupidRenderLoop(playback.tick.bind(playback));
   </script>
