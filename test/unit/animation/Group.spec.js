@@ -35,9 +35,9 @@ describe('AnimationGroup', function() {
     /* eslint-enable no-new */
   });
 
-  it('has a getter for the endTime', function() {
+  it('has a getter for the totalDuration', function() {
     const group = createGroup('combine');
-    expect(group.endTime).to.eql(group.animations[1].lastTween.end);
+    expect(group.totalDuration).to.eql(group.animations[1].lastTween.end);
   });
 
   describe('atTime', function() {

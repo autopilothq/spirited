@@ -1,7 +1,9 @@
+
 /**
  * Default options for an animation
  * @name defaultOptions
  * @type {Object}
+ * @readonly
  * @private
  */
 export default {
@@ -9,7 +11,7 @@ export default {
    * If true the animated values will be rounded to the nearest whole integer.
    *
    * @name round
-   * @type {Boolean}
+   * @const {Boolean}
    */
   round: true,
 
@@ -17,7 +19,7 @@ export default {
    * If true the animation will loop until it is stopped.
    *
    * @name loop
-   * @type {Boolean}
+   * @const {Boolean}
    */
   loop: true,
 };

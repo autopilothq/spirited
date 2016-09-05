@@ -16,7 +16,7 @@ export const createMockAnim = (tweenValues) => {
       return tweens[tweens.length - 1];
     },
 
-    get endTime() {
+    get totalDuration() {
       return this.lastTween && this.lastTween.end;
     },
 

@@ -1,5 +1,5 @@
 /**
- * Creates a tween object.
+ * Creates a tween object. This is used internally by Animation.
  *
  * @param  {Number} start    The time when the start will start, counting from
  *                           time 0, which is when the first tween will start.

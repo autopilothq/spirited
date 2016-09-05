@@ -42,6 +42,7 @@ import * as easingFunctions from 'easing-utils';
  *
  * @param  {String} easing     The name of the function to use
  * @return {Function}            The easing function.
+ * @private
  */
 export default (easing) => {
   if (!easingFunctions.hasOwnProperty(easing)

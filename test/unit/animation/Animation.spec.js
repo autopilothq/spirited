@@ -44,8 +44,8 @@ describe('Animation', function() {
     expect(anim.lastTween).to.eql(anim.tweens[1]);
   });
 
-  it('has a getter for the endTime', function() {
-    expect(anim.endTime).to.eql(anim.lastTween.end);
+  it('has a getter for the totalDuration', function() {
+    expect(anim.totalDuration).to.eql(anim.lastTween.end);
   });
 
   describe('elapsedToDuration', function() {

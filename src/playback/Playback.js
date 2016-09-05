@@ -150,9 +150,9 @@ export default class Playback {
       return [];
     }
 
-    const endTime = this.animation.endTime;
     const elapsed = now - this.startedAt;
-    const justLooped = Math.floor(elapsed / endTime) > Math.floor(this.lastElapsed / endTime);
+    const progress = t => Math.floor(t / this.animation.totalDuration);
+    const justLooped = progress(elapsed) > progress(this.lastElapsed);
 
     if (this.stopping && justLooped) {
       // This means that our time caused the animation to loop around, we've
