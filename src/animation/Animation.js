@@ -31,6 +31,11 @@ const identityFn = value => value;
  *
  */
 export default class Animation {
+  /**
+   * The animation tweens
+   *
+   * @property {Array}  tweens  - The array of tween objects
+   */
   tweens = [];
 
   /**

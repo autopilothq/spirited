@@ -1,7 +1,9 @@
+
 /**
  * Default options for playback
  * @name defaultOptions
  * @type {Object}
+ * @readonly
  * @private
  */
 export default {
