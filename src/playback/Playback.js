@@ -1,4 +1,5 @@
 import present from 'present';
+import defaultOptions from './defaultOptions.js';
 
 // Animation states
 const started = Symbol('STARTED');
@@ -22,22 +23,25 @@ export default class Playback {
   lastElapsed = 0.0;
   startedAt = 0.0;
   state = idle;
-  onCompleteCallbacks = [];
-  onTickCallbacks = [];
+  onCompleteCallback = void 0;
+  onTickCallback = void 0;
 
   /**
    * [create description]
    * @param  {Array} animation [description]
    * @param  {Array} entities  [description]
-   * @return {Playback}           [description]
+   * @return {Playback}        [description]
    */
   static create(animation, entities) {
-    return new Playback(this, entities);
+    return new Playback(animation, entities);
   }
 
-  constructor(animation, entities) {
+  constructor(animation, entities, options = {}) {
     this.animation = animation;
     this.entities = entities;
+
+    // Note: consider these constant after they're set
+    this.options = Object.freeze(Object.assign({}, defaultOptions, options));
   }
 
   /**
@@ -82,7 +86,7 @@ export default class Playback {
       return this;
     }
 
-    if (!ignoreGraceful && this.animation.options.gracefulStop) {
+    if (!ignoreGraceful && this.options.gracefulStop) {
       this.state = stopping;
       return this;
     }
@@ -90,10 +94,8 @@ export default class Playback {
     this.state = idle;
     this.currentValue = [];
 
-    if (this.onCompleteCallbacks.length) {
-      for (const callback of this.onCompleteCallbacks) {
-        callback();
-      }
+    if (this.onCompleteCallback) {
+      this.onCompleteCallback();
     }
 
     return this;
@@ -109,7 +111,7 @@ export default class Playback {
       throw new Error('onTick callback must be a function');
     }
 
-    this.onTickCallbacks.push(callback);
+    this.onTickCallback = callback;
     return this;
   }
 
@@ -123,7 +125,7 @@ export default class Playback {
       throw new Error('onComplete callback must be a function');
     }
 
-    this.onCompleteCallbacks.push(callback);
+    this.onCompleteCallback = callback;
     return this;
   }
 
@@ -148,8 +150,7 @@ export default class Playback {
       return [];
     }
 
-    const lastTween = this.animation.tweens[this.animation.tweens.length - 1];
-    const endTime = lastTween.end;
+    const endTime = this.animation.endTime;
     const elapsed = now - this.startedAt;
     const justLooped = Math.floor(elapsed / endTime) > Math.floor(this.lastElapsed / endTime);
 
@@ -167,10 +168,8 @@ export default class Playback {
       // then it means that the animation has just completed, or it was already
       // stopping and it just looped.
       this.stop(true);
-    } else {
-      for (const callback of this.onTickCallbacks) {
-        callback(this.currentValue, now);
-      }
+    } else if (this.onTickCallback) {
+      this.onTickCallback(...this.currentValue, now);
     }
 
     return this.currentValue;

@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import * as easingFunctions from 'easing-utils';
-import createEaser from '../../src/createEaser.js';
+import createEaser from '../../../src/animation/createEaser.js';
 
 describe('createEaser', () => {
   it('throws an exception if easing name is not valid', function() {

@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import Animation from '../../src/Animation.js';
+import Animation from '../../../src/animation/Animation.js';
 
 describe('Animation', function() {
   const options = {
@@ -40,6 +40,13 @@ describe('Animation', function() {
     expect(Object.isFrozen(anim.options)).to.be.true;
   });
 
+  it('has a getter for the last tween', function() {
+    expect(anim.lastTween).to.eql(anim.tweens[1]);
+  });
+
+  it('has a getter for the endTime', function() {
+    expect(anim.endTime).to.eql(anim.lastTween.end);
+  });
 
   describe('elapsedToDuration', function() {
     it('throws an exception if time is before startedAt', function() {

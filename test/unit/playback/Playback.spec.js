@@ -1,22 +1,11 @@
 import sinon from 'sinon';
-import Playback from '../../src/Playback.js';
-import Animation from '../../src/Animation.js';
+import Playback from '../../../src/playback/Playback.js';
+import Animation from '../../../src/animation/Animation.js';
 
 
 describe('Playback: initial state', function() {
-  let playback;
-
-  beforeEach(function() {
-    playback = new Playback([1, 2], 100, {
-      easing: 'easeInOutElastic',
-      elasticity: 100,
-      round: false,
-      loop: true,
-      foo: 'bar',
-    });
-  });
-
   it('defaults the state to idle', function() {
+    const playback = new Playback();
     expect(playback.state.toString()).to.eql('Symbol(IDLE)');
   });
 });
@@ -65,7 +54,7 @@ describe('Playback: Running state', () => {
       playback.tick(now);
       onTick.reset();
       playback.tick(now + 10);
-      expect(onTick).to.have.been.calledWith(playback.currentValue, now + 10);
+      expect(onTick).to.have.been.calledWith(...playback.currentValue, now + 10);
     });
   });
 
@@ -98,23 +87,26 @@ describe('Playback: Running state', () => {
 });
 
 describe('Playback: Stopping', function() {
+  let anim;
+
+  beforeEach(function() {
+    const options = {
+      easing: 'linear',
+      elasticity: 100,
+    };
+
+    anim = new Animation([1, 2], 100, options)
+      .tween([2, 4], 100);
+  });
+
   describe('gracefulStop', function() {
-    let onComplete, entity, anim, playback, startedAt;
+    let onComplete, entity, playback, startedAt;
 
     beforeEach(function() {
-      const options = {
-        easing: 'linear',
-        elasticity: 100,
-        gracefulStop: true,
-      };
-
       onComplete = sinon.stub();
       entity = sinon.spy();
 
-      anim = new Animation([1, 2], 100, options)
-        .tween([2, 4], 100);
-
-      playback = new Playback(anim, entity)
+      playback = new Playback(anim, entity, {gracefulStop: true})
         .onComplete(onComplete)
         .start();
 
@@ -143,22 +135,13 @@ describe('Playback: Stopping', function() {
   });
 
   describe('stop', function() {
-    let onComplete, entity, anim, playback, startedAt;
+    let onComplete, entity, playback, startedAt;
 
     beforeEach(function() {
-      const options = {
-        easing: 'linear',
-        elasticity: 100,
-        gracefulStop: false,
-      };
-
       onComplete = sinon.stub();
       entity = sinon.spy();
 
-      anim = new Animation([1, 2], 100, options)
-        .tween([2, 4], 100);
-
-      playback = new Playback(anim, entity)
+      playback = new Playback(anim, entity, {gracefulStop: false})
         .onComplete(onComplete)
         .start();
 

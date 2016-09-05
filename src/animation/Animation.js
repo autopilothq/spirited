@@ -1,8 +1,7 @@
-import Playback from './Playback';
 import createEaser from './createEaser.js';
 import createTween from './createTween.js';
 import defaultOptions from './defaultOptions.js';
-import {isNumberArray} from './validation.js';
+import {isNumberArray} from '../validation.js';
 
 // Private symbols
 const maybeRound = Symbol('MAYBEROUND');
@@ -35,7 +34,7 @@ const identityFn = value => value;
 export default class Animation {
   tweens = [];
 
-  constructor(initialTweenValues, defaultDuration, {easing, elasticity, ...options} = {}) {
+  constructor(initialTweenValues, defaultDuration, {easing, ...options} = {}) {
     if (!isNumberArray(initialTweenValues)) {
       throw new Error('You must provide initialTweenValues as an array of numbers');
     }
@@ -51,7 +50,7 @@ export default class Animation {
 
     // Note: consider these constant after they're set
     this.options = Object.freeze(Object.assign({}, defaultOptions, options));
-    this.ease = createEaser(easing, elasticity);
+    this.ease = createEaser(easing);
 
     // Usually the tween values are actuall pairs of [value, deltaToTheNextValue]
     // we can't calculate the delta initially though, as we only have a single
@@ -72,9 +71,18 @@ export default class Animation {
   /**
    * [lastTween description]
    * @return {[type]} [description]
+   * @private
    */
   get lastTween() {
     return this.tweens[this.tweens.length - 1];
+  }
+
+  /**
+   * [endTime description]
+   * @return {[type]} [description]
+   */
+  get endTime() {
+    return this.lastTween && this.lastTween.end;
   }
 
   /**
@@ -108,18 +116,10 @@ export default class Animation {
   }
 
   /**
-   * [playback description]
-   * @param  {Array} entities [description]
-   * @return {Playback}          [description]
-   */
-  playback(entities) {
-    return new Playback(this, ...entities);
-  }
-
-  /**
    * [elapsedToDuration description]
    * @param  {Number} [elapsedTime=0] [description]
    * @return {[type]}                 [description]
+   * @private
    */
   elapsedToDuration(elapsedTime = 0) {
     if (elapsedTime < 0) {
@@ -147,6 +147,7 @@ export default class Animation {
    * [tweenAtTime description]
    * @param  {[type]} elapsedTime [description]
    * @return {[type]}             [description]
+   * @private
    */
   tweenAtTime(elapsedTime) {
     // Calculate how far through the animation we are, taking into account looping.
@@ -178,6 +179,7 @@ export default class Animation {
    * @param  {[type]} tween [description]
    * @param  {[type]} time  [description]
    * @return {[type]}       [description]
+   * @private
    */
   interpolate(tween, time) {
     const {values, start, duration} = tween;

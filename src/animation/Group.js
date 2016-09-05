@@ -1,6 +1,5 @@
-import Playback from './Playback';
-import createEaser from './createEaser.js';
 import defaultOptions from './defaultOptions.js';
+import getCardinalityAndEndTime from './getCardinalityAndEndTime.js';
 
 // Private symbols
 const maybeRound = Symbol('MAYBEROUND');
@@ -12,26 +11,6 @@ const validAggregationMethods = Object.freeze([
 ]);
 
 /**
- * Looks at an array of animations and works out which returns the max
- * cardinality of all of their tween values.
- *
- * @param  {Array} animations An array of Animation objects
- * @return {Number}           The max cardinality, as an integer
- */
-const largestValueCardinality = (animations) => {
-  let max = -1;
-
-  for (const {tweens} of animations) {
-    if (tweens[0].values.length > max) {
-      max = tweens[0].values.length;
-    }
-  }
-
-  return max;
-};
-
-
-/**
  * @TODO docs
  *
  * @constructor
@@ -39,7 +18,7 @@ const largestValueCardinality = (animations) => {
  *
  */
 export default class AnimationGroup {
-  constructor(animations, {aggregationMethod, easing, elasticity, ...options} = {}) {
+  constructor(animations, {aggregationMethod, ...options} = {}) {
     if (!Array.isArray(animations) || animations.length === 0) {
       throw new Error('You must supply AnimationGroups with at least one Animation');
     }
@@ -52,10 +31,11 @@ export default class AnimationGroup {
 
     // Note: consider these constant after they're set
     this.options = Object.freeze(Object.assign({}, defaultOptions, options));
-    this.ease = createEaser(easing, elasticity);
+
+    const {cardinality, endTime} = getCardinalityAndEndTime(animations);
 
     const resultsSize = this.aggregationMethod === 'combine'
-                          ? largestValueCardinality(animations)
+                          ? cardinality
                           : animations.length;
 
     // Readonly for safety
@@ -63,6 +43,7 @@ export default class AnimationGroup {
       aggregationMethod: {value: aggregationMethod},
       animations: {value: animations},
       lastResult: {value: new Array(resultsSize)},
+      endTime: {value: endTime},
     });
 
     // Maybe this a private helper, it get's used in interpolate
@@ -73,15 +54,6 @@ export default class AnimationGroup {
 
       return identityFn;
     })();
-  }
-
-  /**
-   * [playback description]
-   * @param  {Array} entities    [description]
-   * @return {Playback}          [description]
-   */
-  playback(entities) {
-    return new Playback(this, ...entities);
   }
 
   /**

@@ -45,8 +45,8 @@
     let s, loop;
 
 
-    const borderRadius = animate([0], 300, { loop: true, easing: 'linear' })
-                          .tween([10], 300)
+    const borderRadius = animate([0], 1000, { loop: true, easing: 'linear' })
+                          .tween([40], 1000)
 
     const moveTo = animate([startLeft, startTop], 2000, { loop: true, easing: 'easeInOutQuad' })
                       .tween([startLeft, startTop + 300], 2000)
@@ -56,7 +56,6 @@
 
     const anim = shakeNMove(widget)
                     .onTick(([top, left], borderRadius) => {
-                      console.log(top, left, borderRadius);
                       widget.style.left = left + 'px';
                       widget.style.top = top + 'px';
                       widget.style.borderRadius = borderRadius + 'px';
@@ -69,9 +68,10 @@
 
     loop = stupidRenderLoop(anim.tick.bind(anim));
 
-    setTimeout(() => {
-      anim.stop();
-    }, 500);
+    // Animation for 2 sec and then stop
+    // setTimeout(() => {
+    //   anim.stop();
+    // }, 2000);
   </script>
 </body>
 
