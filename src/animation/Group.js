@@ -2,14 +2,13 @@ import defaultOptions from './defaultOptions.js';
 import getCardinalityAndEndTime from './getCardinalityAndEndTime.js';
 import GroupError from './GroupError.js';
 
-// Private symbols
+// Private symbols and helpers
 const maybeRound = Symbol('MAYBEROUND');
-
 const identityFn = value => value;
-
 const validAggregationMethods = Object.freeze([
   'combine', 'compose',
 ]);
+
 
  /**
   * @desc This represents a group of animations. It exposes a public API identical

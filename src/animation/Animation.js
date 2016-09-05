@@ -4,9 +4,8 @@ import defaultOptions from './defaultOptions.js';
 import TweenError from './TweenError.js';
 import {isNumberArray} from '../validation.js';
 
-// Private symbol
+// Private symbols and helpers
 const maybeRound = Symbol('MAYBEROUND');
-
 const identityFn = value => value;
 
 
@@ -48,7 +47,7 @@ export default class Animation {
    *                                     See {@link createEaser} docs for the
    *                                     possible options
    * @param  {Object} options            See {@link defaultOptions} for the valid options
-   * @return {Animation}                 [description]
+   * @return {Animation}                 The new Animation
    * @throws {TweenError}
    */
   constructor(initialTweenValues, defaultDuration, {easing, ...options} = {}) {

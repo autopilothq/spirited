@@ -18,7 +18,7 @@ const makePlaybackGroup = (animations, aggregationMethod, {gracefulStop} = {}) =
   const animGroup = new AnimationGroup(animations, {aggregationMethod});
 
   return (...entities) => {
-    return Playback.create(animGroup, entities, {gracefulStop});
+    return new Playback(animGroup, entities, {gracefulStop});
   };
 };
 
@@ -44,7 +44,7 @@ export const animate = (initialTweenValues, defaultDuration, options) => {
  * @return {Playback}         [description]
  */
 export const playback = (animation, entities, options) => {
-  return Playback.create(animation, entities, options);
+  return new Playback(animation, entities, options);
 };
 
 /**

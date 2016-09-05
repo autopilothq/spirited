@@ -33,7 +33,6 @@ describe('Playback: Running state', () => {
     playback = new Playback(anim, entity)
       .onTick(onTick)
       .start(now);
-
   });
 
   describe('tick', function() {
@@ -44,19 +43,18 @@ describe('Playback: Running state', () => {
     });
 
     it('interpolates between tweens', function() {
-      playback.tick(playback.startedAt);
-      expect(playback.currentValue).to.eql([1, 2]);
+      expect(playback.tick(playback.startedAt)).to.eql([1, 2]);
 
-      playback.tick(now + 10);
-      expect(playback.currentValue[0]).to.be.closeTo(1 + 1 * 10.0 / 100.0, 0.0001);
-      expect(playback.currentValue[1]).to.be.closeTo(2 + 2 * 10.0 / 100.0, 0.0001);
+      const currentValue = playback.tick(now + 10);
+      expect(currentValue[0]).to.be.closeTo(1 + 1 * 10.0 / 100.0, 0.0001);
+      expect(currentValue[1]).to.be.closeTo(2 + 2 * 10.0 / 100.0, 0.0001);
     });
 
     it('calls onTickCallback with the current value and time', function() {
       playback.tick(now);
       onTick.reset();
-      playback.tick(now + 10);
-      expect(onTick).to.have.been.calledWith(...playback.currentValue, now + 10);
+      const currentValue = playback.tick(now + 10);
+      expect(onTick).to.have.been.calledWith(...currentValue, now + 10);
     });
   });
 
@@ -115,7 +113,7 @@ describe('Playback: Stopping', function() {
         .onComplete(onComplete)
         .start(startedAt);
 
-      playback.tick(startedAt + 300);     // tick to second tween...
+      playback.tick(startedAt + 100);     // tick to second tween...
       playback.stop();                    // playback should be stopping rather than idle
     });
 
@@ -129,12 +127,12 @@ describe('Playback: Stopping', function() {
     it('stops the playback the next time it loops', function() {
       // move the animation back to the first tween again, which should trigger
       // our playback to stop.
-      playback.tick(startedAt + 400);
+      const currentValue = playback.tick(startedAt + 200);
 
       // Verify that we're actually in the stopped state
       expect(playback.state.toString()).to.eql('Symbol(IDLE)');
       expect(onComplete).to.have.been.called;
-      expect(playback.currentValue).to.eql([]);
+      expect(currentValue).to.eql([]);
     });
   });
 
@@ -156,10 +154,6 @@ describe('Playback: Stopping', function() {
 
     it('calls the onComplete callback', function() {
       expect(onComplete).to.have.been.called;
-    });
-
-    it('resets currentValue to undefined', function() {
-      expect(playback.currentValue).to.eql([]);
     });
   });
 });

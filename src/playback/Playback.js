@@ -1,48 +1,64 @@
 import defaultOptions from './defaultOptions.js';
 
-// Animation states
+// Valid Animation states
 const started = Symbol('STARTED');
 const stopping = Symbol('STOPPING');
 const idle = Symbol('IDLE');
 
 
 /**
- * Playback object. Think of this as a concrete use of an Animation.
+ * Playback object. Think of this as a concrete use of the more-abstract Animation.
+ * You could view Playback as a particular animation at a particular point in time.
+ *
  * User's don't manually instantiate it, hence it's private.
  *
- * @TODO docs for parameters
- * @TODO docs for entities
+ * @example TODO
  *
- * @constructor
  * @private
  *
  */
 export default class Playback {
-  currentValue = void 0;
-  lastElapsed = 0.0;
-  startedAt = 0.0;
+  /**
+   * Indicates the current playback state.
+   *
+   * @property {started|stopping|idle} state - The current playback state
+   * @readonly
+   */
   state = idle;
+
+  /**
+   * The number of multiples of this.animation.totalDuration that we have
+   * passed through. If it's > 0 then we've looped at least once. This is only
+   * used for internal book keeping.
+   *
+   * @property {Number}  elapsedDurations  - The multiple of animation total
+   *                                         duration that playback is in
+   * @private
+   * @readonly
+   */
+  elapsedDurations = 0;
+
+  /**
+   * The time when Playback is started. This is set automatically when {@link Playback#start}
+   * is called
+   *
+   * @property {Number}   startedAt - the timestamp when the Playback was started
+   * @private
+   * @readonly
+   */
+  startedAt = 0.0;
+
   onCompleteCallback = void 0;
   onTickCallback = void 0;
 
   /**
-   * [create description]
-   * @param  {Array} animation [description]
-   * @param  {Array} entities  [description]
-   * @param  {Object} options  [description]
-   * @return {Playback}        [description]
-   */
-  static create(animation, entities, options) {
-    return new Playback(animation, entities, options);
-  }
-
-  /**
+   * Playback constructor.
    *
+   * @param  {Animation} animation  The Animation to play
+   * @param  {Array} entities       Related entities that will be passed to the onTick callback
+   * @param  {Object} [options={}]  See {@link defaultOptions} for the valid options
+   * @return {Playback}             The new Playback
    *
-   * @param  {[type]} animation    [description]
-   * @param  {[type]} entities     [description]
-   * @param  {Object} [options={}] [description]
-   * @return {[type]}              [description]
    */
   constructor(animation, entities, options = {}) {
     this.animation = animation;
@@ -64,17 +80,17 @@ export default class Playback {
   /**
    * Begin playback
    *
-   * @param  {Number} now [description]
+   * @param  {Number} time [description]
    * @return {Playback} The Playback object
    */
-  start(now) {
+  start(time) {
     if (this.state !== idle) {
       throw new Error('Playback has already started');
     }
 
     this.state = started;
-    this.startedAt = now;
-    this.lastElapsed = 0;
+    this.startedAt = time;
+    this.elapsedDurations = 0;
     return this;
   }
 
@@ -107,7 +123,6 @@ export default class Playback {
     }
 
     this.state = idle;
-    this.currentValue = [];
 
     if (this.onCompleteCallback) {
       this.onCompleteCallback();
@@ -147,7 +162,10 @@ export default class Playback {
   }
 
   /**
-   * Clean up immediately. After destroy the object cannot be used anymore
+   * Clean up immediately.
+   *
+   * After #destroy this object cannot be safely used anymore. Here be
+   * dragons, abandon all hope, etc.
    *
    * @return {undefined}
    */
@@ -158,30 +176,34 @@ export default class Playback {
   }
 
   /**
-   * [tick description]
-   * @param  {Number} now [description]
-   * @return {Array}     [description]
+   * Advance the playback to time. This will trigger onTick and onComplete callbacks
+   * as necessary (synchronously) and return the array of current values.
+   *
+   * @param  {Number} time  The time to tick to
+   * @return {Array}        The array of interpolated values for time
    */
-  tick(now) {
+  tick(time) {
     if (this.state === idle) {
       // not runing, do nuthin
       return [];
     }
 
-    const elapsed = now - this.startedAt;
-    const progress = t => Math.floor(t / this.animation.totalDuration);
-    const justLooped = progress(elapsed) > progress(this.lastElapsed);
+    const elapsed = time - this.startedAt;
+    const elapsedDurations = Math.floor(elapsed / this.animation.totalDuration);
+    const justLooped = elapsedDurations > this.elapsedDurations;
+    let currentValue;
+    this.elapsedDurations = elapsedDurations;
 
     if (this.stopping && justLooped) {
       // This means that our time caused the animation to loop around, we've
       // passed through the start point since the last tick so it's safe to
       // reset to the first tween and then stop.
-      this.currentValue = void 0;
+      currentValue = void 0;
     } else {
-      this.currentValue = this.animation.atTime(elapsed);
+      currentValue = this.animation.atTime(elapsed);
     }
 
-    if (this.currentValue === void 0) {
+    if (currentValue === void 0) {
       // If we couldn't find a tween for this time, but the animation is started,
       // then it means that the animation has just completed, or it was already
       // stopping and it just looped.
@@ -189,9 +211,9 @@ export default class Playback {
     }
 
     if (this.onTickCallback) {
-      this.onTickCallback(...this.currentValue, now);
+      this.onTickCallback(...currentValue, time);
     }
 
-    return this.currentValue;
+    return currentValue || [];
   }
 }
