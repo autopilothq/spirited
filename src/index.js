@@ -70,38 +70,54 @@ shapeShaker.tick(time);     // <== private API
 
 /**
  * [default description]
+ *
  * @param  {Array} initialTweenValues [description]
  * @param  {Number} defaultDuration   [description]
- * @param  {[type]} options =             {} [description]
- * @return {Animation}         [description]
+ * @param  {Object} options           [description]
+ * @return {Animation}                [description]
  */
-export const animate = (initialTweenValues, defaultDuration, options = {}) => {
+export const animate = (initialTweenValues, defaultDuration, options) => {
   return new Animation(initialTweenValues, defaultDuration, options);
 };
 
 /**
- * [description]
- * @param  {Array} animations        [description]
+ * [default description]
+ *
+ * @param  {Animation} animation [description]
+ * @param  {Array} entities  [description]
+ * @param  {Object} options   [description]
+ * @return {Playback}         [description]
+ */
+export const playback = (animation, entities, options) => {
+  return Playback.create(animation, entities, options);
+};
+
+/**
+ * [default description]
+ *
+ * @param  {Array} animations         [description]
  * @param  {String} aggregationMethod [description]
- * @return {AnimationGroup}         [description]
+ * @return {AnimationGroup}           [description]
  */
 export const group = (animations, aggregationMethod) => {
   return new AnimationGroup(animations, {aggregationMethod});
 };
 
 /**
- * [description]
- * @param  {[type]} animations [description]
- * @return {[type]}            [description]
+ * [default description]
+ *
+ * @param  {Array} animations  [description]
+ * @return {AnimationGroup}    [description]
  */
 export const compose = (...animations) => {
   return makePlaybackGroup(animations, 'compose');
 };
 
 /**
- * [description]
- * @param  {[type]} animations [description]
- * @return {[type]}            [description]
+ * [default description]
+ *
+ * @param  {Array} animations  [description]
+ * @return {AnimationGroup}    [description]
  */
 export const combine = (...animations) => {
   return makePlaybackGroup(animations, 'combine');
@@ -114,4 +130,5 @@ if (window) {
   window.combine = combine;
   window.compose = compose;
   window.animate = animate;
+  window.playback = playback;
 }
