@@ -29,12 +29,21 @@ export default class Playback {
    * [create description]
    * @param  {Array} animation [description]
    * @param  {Array} entities  [description]
+   * @param  {Object} options  [description]
    * @return {Playback}        [description]
    */
-  static create(animation, entities) {
-    return new Playback(animation, entities);
+  static create(animation, entities, options) {
+    return new Playback(animation, entities, options);
   }
 
+  /**
+   *
+   *
+   * @param  {[type]} animation    [description]
+   * @param  {[type]} entities     [description]
+   * @param  {Object} [options={}] [description]
+   * @return {[type]}              [description]
+   */
   constructor(animation, entities, options = {}) {
     this.animation = animation;
     this.entities = entities;
@@ -44,20 +53,12 @@ export default class Playback {
   }
 
   /**
-   * [started description]
-   * @return {boolean} True if the animation is running, false otherwise
+   * Indicates whether the playback has started.
+   *
+   * @property {boolean}  started  - True if the animation is running, false otherwise
    */
   get started() {
     return this.state !== idle;
-  }
-
-  /**
-   * [stopping description]
-   * @return {boolean} True if the animation is stopping, i.e. will stop the next
-   *                        time that it loops.
-   */
-  get stopping() {
-    return this.state === stopping;
   }
 
   /**
@@ -78,9 +79,21 @@ export default class Playback {
   }
 
   /**
-   * End playback.
+   * Indicates whether the playback is stopping.
    *
-   * @param {boolean} [ignoreGraceful=false] [description]
+   * @property {boolean}  stopping  - True if the animation is stopping, i.e. will stop the next
+   *                                  time that it loops.
+   */
+  get stopping() {
+    return this.state === stopping;
+  }
+
+  /**
+   * End playback, either immediately (ignoreGraceful=true) or the next time
+   * that it loops. By default ignoreGraceful is false, this means that Playback
+   * will usually finish on the initial value.
+   *
+   * @param {boolean} [ignoreGraceful=false] If true, the playback will be immediately stopped.
    * @return {Playback} The Playback object
    */
   stop(ignoreGraceful = false) {
@@ -104,8 +117,9 @@ export default class Playback {
   }
 
   /**
-   * [onTick description]
-   * @param  {Function} callback [description]
+   * Sets the callback to trigger whenever a tick occurs.
+   *
+   * @param  {Function} callback The callback to trigger onTick
    * @return {Playback} The Playback object
    */
   onTick(callback) {
@@ -118,8 +132,9 @@ export default class Playback {
   }
 
   /**
-   * [onComplete description]
-   * @param  {Function} callback [description]
+   * Sets the callback to trigger when the playback completes.
+   *
+   * @param  {Function} callback The callback to trigger on complete
    * @return {Playback} The Playback object
    */
   onComplete(callback) {
@@ -137,14 +152,15 @@ export default class Playback {
    * @return {undefined}
    */
   destroy() {
-    // TODO blank this.onTickCallback (so it cannot be called accidently
-    // TODO stop the animation immediately (ignore gracefulStop))
+    // blank onTickCallback so it cannot be called accidently
+    this.onTickCallback = void 0;
+    this.stop(true);
   }
 
   /**
    * [tick description]
-   * @param  {[type]} now [description]
-   * @return {[type]}     [description]
+   * @param  {Number} now [description]
+   * @return {Array}     [description]
    */
   tick(now) {
     if (this.state === idle) {
@@ -170,7 +186,9 @@ export default class Playback {
       // then it means that the animation has just completed, or it was already
       // stopping and it just looped.
       this.stop(true);
-    } else if (this.onTickCallback) {
+    }
+
+    if (this.onTickCallback) {
       this.onTickCallback(...this.currentValue, now);
     }
 

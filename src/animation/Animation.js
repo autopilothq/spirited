@@ -81,6 +81,8 @@ export default class Animation {
   }
 
   /**
+   * The last tween of the animation
+   *
    * @property {object}  lastTween  - The last tween of the animation
    * @private
    */
@@ -89,6 +91,8 @@ export default class Animation {
   }
 
   /**
+   * The duration, in ms, of the animation
+   *
    * @property {Number}  totalDuration  - The duration, in ms, of the animation
    */
   get totalDuration() {
