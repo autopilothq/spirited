@@ -7,14 +7,35 @@ const idle = Symbol('IDLE');
 
 
 /**
- * Playback object. Think of this as a concrete use of the more-abstract Animation.
+ * @desc Playback object. Think of this as a concrete use of the more-abstract Animation.
  * You could view Playback as a particular animation at a particular point in time.
  *
  * User's don't manually instantiate it, hence it's private.
  *
- * @example TODO
- *
  * @private
+ * @example Animate two numbers between 1..3 and 2..8
+ *
+ *     const options = {
+ *       loop: true,        // loop at the end of the animation
+ *       round: false,      // don't round interpolated tween values
+ *       easing: 'linear',  // ease (interpolate) values linearly
+ *     };
+ *
+ *     // Create an animation with a initial tween that has the values [1, 2]
+ *     // and a duration of 200ms
+ *     const animation = animate([1, 2], 200, options)
+ *                          .tween([2, 4], 200)
+ *                          .tween([3, 8, 400]);
+ *
+ *     // example low-level usage. In real usuage you would actually use the
+ *     // {@link playback} helper function, the arguments are identical though.
+ *     const playback = new Playback(animation)
+ *                          .onTick((left, top) => {
+ *                            console.log('TICK!', left, top);
+ *                          })
+ *                          .onComoplete(() => {
+ *                            console.log('Animation has completed');
+ *                          });
  *
  */
 export default class Playback {

@@ -36,8 +36,8 @@
   <script src='util/stupidRenderLoop.js'></script>
   <script src='util/helpers.js'></script>
   <script>
-    const animate = window.animate;
-    const combine = window.combine;
+    const animate = spirited.animate;
+    const combine = spirited.combine;
     const widget = document.getElementById('widget');
     const container = document.getElementById('container');
     const [startLeft, startTop] = getRelativePos(widget, container);
@@ -66,10 +66,10 @@
                     .start(performance.now());
 
     loop = stupidRenderLoop(anim.tick.bind(anim));
-
-    // setTimeout(() => {
-    //   anim.stop();
-    // }, 3000);
+    console.log(startLeft, startTop);
+    setTimeout(() => {
+      anim.stop();
+    }, 3000);
   </script>
 </body>
 

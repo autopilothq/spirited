@@ -18,8 +18,36 @@ const validAggregationMethods = Object.freeze([
   * Like {@link Animation} this is private as you'd only instantiate it indirectly
   * via the high level {@link group}, {@link compose}, and {@link combine} API functions.
   *
-  * @example TODO
   * @private
+  * @example Combine a shaking animation with a move animation
+  *
+  *     // Animate between 0, 10, and -10 in a kind of shaking motion
+  *     const shakeAnim = animate([0], 150, { loop: true, easing: 'linear' })
+  *                         .tween([10], 300)
+  *                         .tween([-10], 150);
+  *
+  *     // Move from 100, 50 to 100, 350
+  *      const moveAnim = animate([100, 50], 2000)
+  *                         .tween([100, 350], 2000)
+  *
+  *     // example low-level usage. In real usuage you would actually use the
+  *     // {@link group}, {@link compose}, or {@link combine} helper functions,
+  *     // the arguments are identical though.
+  *     const group = new AnimationGroup([moveAnim, shakeAnim], {
+  *       aggregationMethod: 'combine'
+  *     });
+  *
+  *     group.atTime(0);     // => [175, 50]    ; at time 0. shake and move at tween 0
+  *     group.atTime(150);   // => [185, 53]    ; begin of shake tween 1
+  *     group.atTime(450);   // => [165, 80]    ; begin of shake tween 2
+  *     group.atTime(600);   // => [175, 104]   ; shake loops back to tween 0,
+  *                                             ; roughly 60% of the way through
+  *                                             ; move tween 0
+  *     group.atTime(2000);  // => [182, 350]   ; begin of move tween 1
+  *     group.atTime(4000);  // => [168, 50]    ; move loops back to tween 0
+  *
+  *     // Note: if loop was false, then `group.atTime(4000);` would have
+  *     // returns undefined as time 4000 beyond the end of both of the Animations.
   *
   */
 export default class AnimationGroup {
@@ -111,7 +139,7 @@ export default class AnimationGroup {
    * @see {@link AnimationGroup#atTime} for a longer description of elapsedTime
    *
    * @param  {Number} elapsedTime The time relative to the animation
-   * @return {Array|Number}     Either an Array of Number values, or a single Number
+   * @return {Array|undefined}    Either an Array of Number values, or undefined
    * @private
    */
   combine(elapsedTime) {
@@ -139,7 +167,7 @@ export default class AnimationGroup {
    * @see {@link AnimationGroup#atTime} for a longer description of elapsedTime
    *
    * @param  {Number} elapsedTime The time relative to the animation
-   * @return {Array|Number}     Either an Array of Number values, or a single Number
+   * @return {Array|undefined}    Either an Array of Number values, or undefined
    * @private
    */
   compose(elapsedTime) {
@@ -170,8 +198,10 @@ export default class AnimationGroup {
    * to a relative "elapsdTime" one.
    *
    * @param  {Number} elapsedTime The time relative to the animation
-   * @return {Array}              The array of interpolated values for the
-   *                              desired elapsed time.
+   * @return {Array|undefined}    The array of interpolated values for the
+   *                              desired elapsed time, or undefined if the animations
+   *                              would all be complete at elapsedTime
+   *
    */
   atTime(elapsedTime) {
     if (this.aggregationMethod === 'combine') {

@@ -79,11 +79,3 @@ export const combine = (...animations) => {
 };
 
 export default animate;
-
-if (window) {
-  // Ugly temp hack for testing some stuff
-  window.combine = combine;
-  window.compose = compose;
-  window.animate = animate;
-  window.playback = playback;
-}

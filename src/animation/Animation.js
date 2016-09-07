@@ -25,8 +25,37 @@ const identityFn = value => value;
  * @see {@link createTween} for the format of tweens
  * @see {@link Playback} for the less abstract form of an animation.
  *
- * @example TODO
  * @private
+ * @example
+ *     // example low-level usage. You should actually use the {@link animate}
+ *     // helper function in real usuage, the arguments are identical though.
+ *     const options = {
+ *       loop: true,        // loop at the end of the animation
+ *       round: false,      // don't round interpolated tween values
+ *       easing: 'linear',  // ease (interpolate) values linearly
+ *     };
+ *
+ *     // Create an animation with a initial tween that has the values [1, 2]
+ *     // and a duration of 200ms
+ *     const animation = new Animation([1, 2], 200, options);
+ *
+ *     // Add two more tweens
+ *     animation.tween([2, 4], 200)
+ *              .tween([3, 8, 400]);
+ *
+ *     animation.atTime(0);     // => [1, 2]    ; at time 0
+ *     animation.atTime(100);   // => [1.5, 3]  ; 50% between tween 0 and 1
+ *     animation.atTime(200);   // => [2, 4]    ; start of tween 1
+ *     animation.atTime(400);   // => [3, 8]    ; start of tween 2
+ *     animation.atTime(600);   // => [1.5, 4]  ; 50% through tween 2, which loops
+ *                                              ; back to tween 0, so we 50% of the
+ *                                              ; way back to tween 0's values.
+ *     animation.atTime(1000);   // => [2, 4]   ; We looped back to the start of tween 1
+ *
+ *     // Note: if loop was false, then `animation.atTime(1000);` would have
+ *     // returns undefined as time 1000 beyond the end of the Animation. You add
+ *     // all the durations to know the total duration. In this case it would be
+ *     // 800 (200+200+400).
  *
  */
 export default class Animation {
@@ -235,8 +264,10 @@ export default class Animation {
    * to a relative "elapsdTime" one.
    *
    * @param  {Number} elapsedTime The time relative to the animation
-   * @return {Array}              The array of interpolated values for the
-   *                              desired elapsed time.
+   * @return {Array|undefined}    The array of interpolated values for the
+   *                              desired elapsed time, or undefined if the animation
+   *                              would be complete at elapsedTime
+   *
    */
   atTime(elapsedTime) {
     const [tween, duration] = this.tweenAtTime(elapsedTime);
