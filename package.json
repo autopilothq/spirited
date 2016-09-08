@@ -1,8 +1,8 @@
 {
   "name": "spirited",
-  "version": "1.0.0-pre.0",
+  "version": "1.0.0-pre.1",
   "description": "A small library for animating numerical arrays",
-  "main": "dist/index.js",
+  "main": "dist/spirited.bundle.js",
   "scripts": {
     "build": "webpack -p",
     "build-dev": "webpack -d",
