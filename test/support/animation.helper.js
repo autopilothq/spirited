@@ -1,7 +1,6 @@
 import createTween from '../../src/animation/createTween.js';
 
-export const createMockAnim = (tweenValues) => {
-  const duration = 200;
+export const createMockAnim = (tweenValues, duration = 200) => {
   let tweens = [];
 
   for (const values of tweenValues) {
