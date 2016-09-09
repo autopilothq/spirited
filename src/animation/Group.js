@@ -60,20 +60,14 @@ export default class AnimationGroup {
    * @throws {GroupError}
    */
   constructor(animations, {aggregationMethod, ...options} = {}) {
-    if (!Array.isArray(animations) || animations.length === 0) {
-      throw new GroupError('You must supply AnimationGroups with at least one Animation');
+    if (!Array.isArray(animations)) {
+      throw new GroupError('The first parameter of an AnimationGroup must be an Array');
     }
 
     if (!validAggregationMethods.includes(aggregationMethod)) {
       throw new GroupError(`Invalid aggregationMethod method for AnimationGropu:
         Got ${aggregationMethod}, expected one of ${validAggregationMethods.join(', ')}`);
     }
-
-
-    const {cardinality, totalDuration} = getCardinalityAndEndTime(animations);
-    const resultsSize = aggregationMethod === 'combine'
-                          ? cardinality
-                          : animations.length;
 
     // Readonly for safety
     Object.defineProperties(this, {
@@ -94,33 +88,15 @@ export default class AnimationGroup {
       aggregationMethod: {value: aggregationMethod},
 
       /**
-       * @property {Array} animations - The animations that this group contains.
+       * @property {Set} animations - The animations that this group contains.
        * @memberof AnimationGroup#
        * @readonly
        */
-      animations: {value: animations},
-
-      /**
-       * A private container to hold the results of the last {@link AnimationGroup#atTime} call.
-       * This is only used to avoid having to create a new Array to hold the
-       * results on every tick.
-       *
-       * @property {Array} lastResult - The array of results
-       * @memberof AnimationGroup#
-       * @readonly
-       * @private
-       */
-      lastResult: {value: new Array(resultsSize)},
-
-      /**
-       * The duration of the entire group in ms.
-       *
-       * @property {Number} totalDuration - The duration of the entire group in ms
-       * @memberof AnimationGroup#
-       * @readonly
-       */
-      totalDuration: {value: totalDuration},
+      animations: {value: new Set(animations)},
     });
+
+    // The the initial size of the resultset and calculate the duration
+    this.resize();
 
     // Maybe this a private helper, it get's used in interpolate
     this[maybeRound] = (() => {
@@ -130,6 +106,56 @@ export default class AnimationGroup {
 
       return identityFn;
     })();
+  }
+
+  /**
+   * @desc An internal helper to regenerate the last resultset and total duration.
+   *
+   * @return {undefined}
+   * @private
+   */
+  resize() {
+    const {cardinality, totalDuration} = getCardinalityAndEndTime(this.animations);
+    const resultsSize = this.aggregationMethod === 'combine'
+                          ? cardinality
+                          : this.animations.size;
+
+    this.lastResult = new Array(resultsSize);
+    this.totalDuration = totalDuration;
+  }
+
+
+  /**
+   * @desc Add an Animation to this group.
+   *
+   * @param {Animation} animation   The animation to add
+   * @return {AnimationGroup}       Returns this, for chaining
+   * @throws {GroupError}
+   *
+   */
+  add(animation) {
+    if (this.animations.has(animation)) {
+      throw new GroupError('This group already contains that animation');
+    }
+
+    this.animations.add(animation);
+    this.resize();
+    return this;
+  }
+
+  /**
+   * @desc Remove an Animation from this group.
+   *
+   * @param {Animation} animation   The animation to remove
+   * @return {AnimationGroup}     Returns this, for chaining
+   *
+   */
+  remove(animation) {
+    if (this.animations.delete(animation)) {
+      this.resize();
+    }
+
+    return this;
   }
 
   /**
@@ -172,8 +198,9 @@ export default class AnimationGroup {
    */
   compose(elapsedTime) {
     let hasResults = false;
+    let i = 0;
 
-    this.animations.forEach((animation, i) => {
+    this.animations.forEach((animation) => {
       const result = animation.atTime(elapsedTime);
       if (result) {
         hasResults = true;
@@ -181,6 +208,8 @@ export default class AnimationGroup {
       } else {
         this.lastResult[i] = void 0;
       }
+
+      i += 1;
     });
 
     return hasResults ? this.lastResult : void 0;

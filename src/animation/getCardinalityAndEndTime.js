@@ -11,6 +11,10 @@
  * @private
  */
 export default (animations) => {
+  if (animations.size === 0) {
+    return {cardinality: 0, totalDuration: 0};
+  }
+
   let cardinality = -1;
   let totalDuration = -1;
 
