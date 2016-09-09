@@ -68,20 +68,21 @@ export default class Animation {
 
   /**
    * Creates a new Animation
-   * @param  {Array} initialTweenValues  The values for the intial tween.
-   * @param  {Number} defaultDuration    The duration to use for the initial tween,
-   *                                     and for another other tweens where durations
-   *                                     are not provided.
-   * @param  {String} easing             The name of the easing method to use.
-   *                                     See {@link createEaser} docs for the
-   *                                     possible options
-   * @param  {Object} options            See {@link defaultOptions} for the valid options
-   * @return {Animation}                 The new Animation
+   * @param  {Array|Number} initialValues   The values for the intial tween.
+   * @param  {Number} defaultDuration       The duration to use for the initial tween,
+   *                                        and for another other tweens where durations
+   *                                        are not provided.
+   * @param  {String} easing                The name of the easing method to use.
+   *                                        See {@link createEaser} docs for the
+   *                                        possible options
+   * @param  {Object} options               See {@link defaultOptions} for the valid options
+   * @return {Animation}                    The new Animation
    * @throws {TweenError}
    */
-  constructor(initialTweenValues, defaultDuration, {easing, ...options} = {}) {
-    if (!isNumberArray(initialTweenValues)) {
-      throw new TweenError('You must provide initialTweenValues as an array of numbers');
+  constructor(initialValues, defaultDuration, {easing, ...options} = {}) {
+    if (typeof initialValues !== 'number' && !isNumberArray(initialValues)) {
+      throw new TweenError(
+        'You must provide initialValues as a single number or a array of numbers');
     }
 
     if (defaultDuration === void 0) {
@@ -100,7 +101,10 @@ export default class Animation {
     // Usually the tween values are actuall pairs of [value, deltaToTheNextValue]
     // we can't calculate the delta initially though, as we only have a single
     // tween.
-    const tweenValues = initialTweenValues.map(value => [value]);
+    const tweenValues = Array.isArray(initialValues)
+                          ? initialValues.map(value => [value])
+                          : [[initialValues]];
+
     this.tweens.push(createTween(0, defaultDuration, tweenValues));
 
     // Maybe this a private helper, it get's used in interpolate
@@ -140,26 +144,29 @@ export default class Animation {
    * @throws {TweenError}
    */
   tween(targetValues, duration = this.defaultDuration) {
-    if (!isNumberArray(targetValues)) {
-      throw new TweenError('Can only animate arrays of numbers');
+    if (typeof targetValues !== 'number' && !isNumberArray(targetValues)) {
+      throw new TweenError(
+        'You must provide initialValues as a single number or a array of numbers');
     }
 
-    if (this.tweens[0].values.length !== targetValues.length) {
+    const values = Array.isArray(targetValues) ? targetValues : [targetValues];
+    const valuesAndDeltas = new Array(values.length);
+    const firstTweenValues = this.tweens[0].values;
+
+    if (firstTweenValues.length !== values.length) {
       throw new TweenError('All tweens must have the same number of targets');
     }
 
-    const previousTween = this.lastTween;
-    const values = new Array(targetValues.length);
+    this.lastTween.values.forEach((prevValue, i) => {
+      prevValue[1] = values[i] - prevValue[0];
 
-    previousTween.values.forEach((prevValue, i) => {
-      prevValue[1] = targetValues[i] - prevValue[0];
-      values[i] = [
-        targetValues[i],
-        this.tweens[0].values[i][0] - targetValues[i],
+      valuesAndDeltas[i] = [
+        values[i],
+        firstTweenValues[i][0] - values[i],
       ];
     });
 
-    this.tweens.push(createTween(previousTween.end, duration, values));
+    this.tweens.push(createTween(this.lastTween.end, duration, valuesAndDeltas));
     return this;
   }
 

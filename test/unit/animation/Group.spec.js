@@ -99,7 +99,11 @@ describe('AnimationGroup', function() {
       expect(group.compose(0)).to.eql([[1, 2], [2, 4], [10, 20]]);
     });
 
-    it('throws an exception if the animation is already in the group');
+    it('throws an exception if the animation is already in the group', function() {
+      expect(() => {
+        group.add(anim1);
+      }).to.throw('This group already contains that animation');
+    });
   });
 
   describe('remove', function() {

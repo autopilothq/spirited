@@ -48,6 +48,14 @@ describe('Animation', function() {
     expect(anim.totalDuration).to.eql(anim.lastTween.end);
   });
 
+  it('can accept a single number rather than an array of number', function() {
+    anim = new Animation(2, 100, options).tween(4, 100);
+
+    // The each of the elements in values is of the form [value, deltaToNextValue]
+    expect(anim.tweens[0].values[0]).to.eql([2, 2]);
+    expect(anim.tweens[1].values[0]).to.eql([4, -2]);
+  });
+
   describe('elapsedToDuration', function() {
     it('throws an exception if time is before startedAt', function() {
       expect(() => {
