@@ -1,6 +1,6 @@
 {
   "name": "spirited",
-  "version": "1.0.0-pre.1",
+  "version": "1.0.0-pre.2",
   "description": "A small library for animating numerical arrays",
   "main": "dist/spirited.bundle.js",
   "scripts": {
