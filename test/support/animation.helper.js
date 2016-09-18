@@ -19,6 +19,10 @@ export const createMockAnim = (tweenValues, duration = 200) => {
       return this.lastTween && this.lastTween.end;
     },
 
+    get cardinality() {
+      return tweens[0] ? tweens[0].values.length : -1;
+    },
+
     atTime() {
       if (tweenValues.length === 0) {
         return void 0;

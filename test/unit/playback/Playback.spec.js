@@ -31,13 +31,13 @@ describe('Playback: Running state', () => {
     now = present();
 
     playback = new Playback(anim, entity)
-      .onTick(onTick)
+      .on('tick', onTick)
       .start(now);
   });
 
   describe('tick', function() {
     it('does nothing if the playback is not started', function() {
-      playback = new Playback(anim, entity).onTick(onTick);
+      playback = new Playback(anim, entity).on('tick', onTick);
       playback.tick(now);
       expect(onTick).not.to.have.been.called;
     });
@@ -69,7 +69,7 @@ describe('Playback: Running state', () => {
       now = present();
 
       playback = new Playback(anim, entity)
-        .onComplete(onComplete)
+        .on('end', onComplete)
         .start(now);
 
       playback.tick(playback.startedAt + 200);
@@ -110,7 +110,7 @@ describe('Playback: Stopping', function() {
       startedAt = present();
 
       playback = new Playback(anim, entity, {gracefulStop: true})
-        .onComplete(onComplete)
+        .on('end', onComplete)
         .start(startedAt);
 
       playback.tick(startedAt + 100);     // tick to second tween...
@@ -145,7 +145,7 @@ describe('Playback: Stopping', function() {
       startedAt = present();
 
       playback = new Playback(anim, entity, {gracefulStop: false})
-        .onComplete(onComplete)
+        .on('end', onComplete)
         .start(startedAt);
 
       playback.tick(startedAt + 50);     // halfway through the first tween

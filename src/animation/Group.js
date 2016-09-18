@@ -65,7 +65,7 @@ export default class AnimationGroup {
     }
 
     if (!validAggregationMethods.includes(aggregationMethod)) {
-      throw new GroupError(`Invalid aggregationMethod method for AnimationGropu:
+      throw new GroupError(`Invalid aggregationMethod method for AnimationGroup:
         Got ${aggregationMethod}, expected one of ${validAggregationMethods.join(', ')}`);
     }
 
@@ -93,6 +93,13 @@ export default class AnimationGroup {
        * @readonly
        */
       animations: {value: new Set(animations)},
+
+      /**
+       * @property {Array} lastResult - The results from the last tick
+       * @memberof AnimationGroup#
+       * @readonly
+       */
+      lastResult: {value: []},
     });
 
     // The the initial size of the resultset and calculate the duration
@@ -120,10 +127,17 @@ export default class AnimationGroup {
                           ? cardinality
                           : this.animations.size;
 
-    this.lastResult = new Array(resultsSize);
+    this.lastResult.length = resultsSize;
     this.totalDuration = totalDuration;
   }
 
+  /**
+   * @TODO
+   * @return {Number} @TODO
+   */
+  get cardinality() {
+    return this.lastResult.length;
+  }
 
   /**
    * @desc Add an Animation to this group.
@@ -177,8 +191,8 @@ export default class AnimationGroup {
       if (results) {
         hasResults = true;
 
-        results.forEach((result, i) => {
-          this.lastResult[i] += result;
+        results.forEach((result, r) => {
+          this.lastResult[r] += result;
         });
       }
     }
@@ -200,7 +214,7 @@ export default class AnimationGroup {
     let hasResults = false;
     let i = 0;
 
-    this.animations.forEach((animation) => {
+    for (const animation of this.animations) {
       const result = animation.atTime(elapsedTime);
       if (result) {
         hasResults = true;
@@ -210,7 +224,7 @@ export default class AnimationGroup {
       }
 
       i += 1;
-    });
+    }
 
     return hasResults ? this.lastResult : void 0;
   }

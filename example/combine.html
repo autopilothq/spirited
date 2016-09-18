@@ -44,9 +44,9 @@
     let s, loop;
 
 
-    const shake = animate([0], 150, { loop: true, easing: 'linear' })
-                      .tween([10], 300)
-                      .tween([-10], 150);
+    const shake = animate(0, 150, { loop: true, easing: 'linear' })
+                      .tween(10, 300)
+                      .tween(-10, 150);
 
     const moveTo = animate([startLeft, startTop], 2000, { loop: true, easing: 'easeInOutQuad' })
                       .tween([startLeft, startTop + 300], 2000)
@@ -55,11 +55,11 @@
     const shakeNMove = combine(moveTo, shake);
 
     const anim = shakeNMove(widget)
-                    .onTick((left, top) => {
+                    .on('tick', (left, top) => {
                       widget.style.left = left + 'px';
                       widget.style.top = top + 'px';
                     })
-                    .onComplete(() => {
+                    .on('end', () => {
                       console.log('ALL DONE');
                       loop.stop();
                     })
@@ -68,6 +68,7 @@
     loop = stupidRenderLoop(anim.tick.bind(anim));
     console.log(startLeft, startTop);
     setTimeout(() => {
+      console.log('STOPPING ANIMATION');
       anim.stop();
     }, 3000);
   </script>

@@ -137,6 +137,14 @@ export default class Animation {
   }
 
   /**
+   * @TODO
+   * @return {Number} @TODO
+   */
+  get cardinality() {
+    return this.tweens[0] ? this.tweens[0].values.length : -1;
+  }
+
+  /**
    * Add a tween to the animation.
    * @param  {Array} targetValues                       The values for the tween
    * @param  {Number} [duration=this.defaultDuration]   The duration of this tween

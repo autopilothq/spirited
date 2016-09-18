@@ -20,7 +20,6 @@ function createGroup(aggregationMethod = 'combine', tweens1, tweens2) {
   }));
 }
 
-
 describe('AnimationGroup', function() {
   it('throws an exception if the animations argument is not an array', function() {
     /* eslint-disable no-new */
