@@ -1,4 +1,6 @@
+import {EventEmitter} from 'drip';
 import defaultOptions from './defaultOptions.js';
+import PlaybackError from './PlaybackError.js';
 
 // Valid Animation states
 const started = Symbol('STARTED');
@@ -38,7 +40,7 @@ const idle = Symbol('IDLE');
  *                          });
  *
  */
-export default class Playback {
+export default class Playback extends EventEmitter {
   /**
    * Indicates the current playback state.
    *
@@ -69,8 +71,6 @@ export default class Playback {
    */
   startedAt = 0.0;
 
-  onCompleteCallback = void 0;
-  onTickCallback = void 0;
 
   /**
    * Playback constructor.
@@ -82,6 +82,7 @@ export default class Playback {
    *
    */
   constructor(animation, entities, options = {}) {
+    super();
     this.animation = animation;
     this.entities = entities;
 
@@ -90,23 +91,15 @@ export default class Playback {
   }
 
   /**
-   * Indicates whether the playback has started.
-   *
-   * @property {boolean}  started  - True if the animation is running, false otherwise
-   */
-  get started() {
-    return this.state !== idle;
-  }
-
-  /**
    * Begin playback
    *
    * @param  {Number} time [description]
    * @return {Playback} The Playback object
+   * @throws {PlaybackError}
    */
   start(time) {
     if (this.state !== idle) {
-      throw new Error('Playback has already started');
+      throw new PlaybackError('Playback has already started');
     }
 
     this.state = started;
@@ -116,14 +109,26 @@ export default class Playback {
   }
 
   /**
+   * Indicates whether the playback has started.
+   *
+   * @property {boolean}  started  - True if the animation is running, false otherwise
+   * @private
+   */
+  get started() {
+    return this.state !== idle;
+  }
+
+  /**
    * Indicates whether the playback is stopping.
    *
    * @property {boolean}  stopping  - True if the animation is stopping, i.e. will stop the next
    *                                  time that it loops.
+   * @private
    */
   get stopping() {
     return this.state === stopping;
   }
+
 
   /**
    * End playback, either immediately (ignoreGraceful=true) or the next time
@@ -144,43 +149,21 @@ export default class Playback {
     }
 
     this.state = idle;
-
-    if (this.onCompleteCallback) {
-      this.onCompleteCallback();
-    }
+    this.emit('end');
 
     return this;
   }
 
   /**
-   * Sets the callback to trigger whenever a tick occurs.
+   * @TODO
+   * @return {Number} @TODO
+   * @private
    *
-   * @param  {Function} callback The callback to trigger onTick
-   * @return {Playback} The Playback object
    */
-  onTick(callback) {
-    if (typeof callback !== 'function') {
-      throw new Error('onTick callback must be a function');
-    }
-
-    this.onTickCallback = callback;
-    return this;
+  get cardinality() {
+    return this.animation.cardinality;
   }
 
-  /**
-   * Sets the callback to trigger when the playback completes.
-   *
-   * @param  {Function} callback The callback to trigger on complete
-   * @return {Playback} The Playback object
-   */
-  onComplete(callback) {
-    if (typeof callback !== 'function') {
-      throw new Error('onComplete callback must be a function');
-    }
-
-    this.onCompleteCallback = callback;
-    return this;
-  }
 
   /**
    * Clean up immediately.
@@ -191,8 +174,8 @@ export default class Playback {
    * @return {undefined}
    */
   destroy() {
-    // blank onTickCallback so it cannot be called accidently
-    this.onTickCallback = void 0;
+    // blank listeners so it cannot be called accidently after this point
+    this.removeAllListeners();
     this.stop(true);
   }
 
@@ -212,8 +195,8 @@ export default class Playback {
     const elapsed = time - this.startedAt;
     const elapsedDurations = Math.floor(elapsed / this.animation.totalDuration);
     const justLooped = elapsedDurations > this.elapsedDurations;
-    let currentValue;
     this.elapsedDurations = elapsedDurations;
+    let currentValue;
 
     if (this.stopping && justLooped) {
       // This means that our time caused the animation to loop around, we've
@@ -229,12 +212,12 @@ export default class Playback {
       // then it means that the animation has just completed, or it was already
       // stopping and it just looped.
       this.stop(true);
+    } else {
+      this.emit('tick', ...currentValue, time);
     }
 
-    if (this.onTickCallback) {
-      this.onTickCallback(...currentValue, time);
-    }
-
-    return currentValue || [];
+    // @TODO if it's an animation group then currentValue will be an array
+    // of arrays instead of just an array
+    return currentValue !== void 0 ? currentValue : [];
   }
 }

@@ -41,15 +41,15 @@
     const [startLeft, startTop] = getRelativePos(widget, container);
     let s, loop;
 
-    const moveTo = animate([startLeft], 200, { loop: true, easing: 'easeInOutQuad' })
-                      .tween([startLeft + 50], 400)
-                      .tween([startLeft - 50])
+    const moveTo = animate(startLeft, 200, { loop: true, easing: 'easeInOutQuad' })
+                      .tween(startLeft + 50, 400)
+                      .tween(startLeft - 50)
 
     const mover = playback(moveTo)
-                      .onTick(left => {
+                      .on('tick', left => {
                         widget.style.left = left + 'px';
                       })
-                      .onComplete(() => {
+                      .on('end', () => {
                         console.log('ALL DONE');
                         loop.stop();
                       })

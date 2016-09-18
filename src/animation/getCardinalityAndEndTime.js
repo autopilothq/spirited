@@ -18,13 +18,13 @@ export default (animations) => {
   let cardinality = -1;
   let totalDuration = -1;
 
-  for (const {tweens, lastTween} of animations) {
-    if (tweens[0].values.length > cardinality) {
-      cardinality = tweens[0].values.length;
+  for (const anim of animations) {
+    if (anim.cardinality > cardinality) {
+      cardinality = anim.cardinality;
     }
 
-    if (lastTween.end > totalDuration) {
-      totalDuration = lastTween.end;
+    if (anim.lastTween.end > totalDuration) {
+      totalDuration = anim.lastTween.end;
     }
   }
 
