@@ -1,4 +1,4 @@
-import {EventEmitter} from 'drip';
+import EventEmitter from 'eventemitter3';
 import sinon from 'sinon';
 import present from 'present';
 import Playback from '../../../src/playback/Playback.js';

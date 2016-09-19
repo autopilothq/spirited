@@ -1,4 +1,4 @@
-import {EventEmitter} from 'drip';
+import EventEmitter from 'eventemitter3';
 import defaultOptions from './defaultOptions.js';
 import PlaybackError from './PlaybackError.js';
 

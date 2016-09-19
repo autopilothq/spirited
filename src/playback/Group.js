@@ -1,4 +1,4 @@
-import {EventEmitter} from 'drip';
+import EventEmitter from 'eventemitter3';
 import present from 'present';
 import GroupError from './GroupError.js';
 
