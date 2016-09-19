@@ -38,7 +38,7 @@
   <script>
     const animate = spirited.animate;
     const combine = spirited.combine;
-    const playback = spirited.playback;
+    const play = spirited.play;
     const widget = document.getElementById('widget');
     const container = document.getElementById('container');
     const [startLeft, startTop] = getRelativePos(widget, container);
@@ -53,10 +53,10 @@
                       .tween([startLeft, startTop + 300], 2000)
 
     // Start shaken immediately
-    const shaken = playback(shake).start(performance.now());
+    const shaken = play(shake).start(performance.now());
 
     // create a new playback group with moveTo and start it
-    const activeAnimations = combine(moveTo)();
+    const activeAnimations = combine(moveTo);
     activeAnimations.on('tick', (left, top) => {
                       widget.style.left = left + 'px';
                       widget.style.top = top + 'px';
@@ -69,7 +69,6 @@
 
 
     loop = stupidRenderLoop(activeAnimations.tick.bind(activeAnimations));
-    console.log(startLeft, startTop);
 
     setTimeout(() => {
       // start shakin' at 2sec

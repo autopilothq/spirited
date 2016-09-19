@@ -54,7 +54,7 @@
 
     const shakeNMove = combine(moveTo, shake);
 
-    const anim = shakeNMove(widget)
+    const anim = shakeNMove
                     .on('tick', (left, top) => {
                       widget.style.left = left + 'px';
                       widget.style.top = top + 'px';
@@ -66,11 +66,11 @@
                     .start(performance.now());
 
     loop = stupidRenderLoop(anim.tick.bind(anim));
-    console.log(startLeft, startTop);
+
     setTimeout(() => {
       console.log('STOPPING ANIMATION');
       anim.stop();
-    }, 3000);
+    }, 8000);
   </script>
 </body>
 

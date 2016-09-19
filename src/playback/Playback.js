@@ -76,15 +76,13 @@ export default class Playback extends EventEmitter {
    * Playback constructor.
    *
    * @param  {Animation} animation  The Animation to play
-   * @param  {Array} entities       Related entities that will be passed to the onTick callback
    * @param  {Object} [options={}]  See {@link defaultOptions} for the valid options
    * @return {Playback}             The new Playback
    *
    */
-  constructor(animation, entities, options = {}) {
+  constructor(animation, options = {}) {
     super();
     this.animation = animation;
-    this.entities = entities;
 
     // Note: consider these constant after they're set
     this.options = Object.freeze(Object.assign({}, defaultOptions, options));

@@ -54,9 +54,8 @@
 
     const shakeNMove = compose(moveTo, borderRadius);
 
-    const anim = shakeNMove(widget)
+    const anim = shakeNMove
                     .on('tick', ([[left, top], borderRadius]) => {
-                      console.log('TICK', [left, top], borderRadius);
                       widget.style.left = left + 'px';
                       widget.style.top = top + 'px';
                       widget.style.borderRadius = borderRadius + 'px';

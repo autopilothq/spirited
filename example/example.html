@@ -35,7 +35,7 @@
   <script src='util/helpers.js'></script>
   <script>
     const animate = spirited.animate;
-    const playback = spirited.playback;
+    const play = spirited.play;
     const widget = document.getElementById('widget');
     const container = document.getElementById('container');
     const [startLeft, startTop] = getRelativePos(widget, container);
@@ -45,7 +45,7 @@
                       .tween(startLeft + 50, 400)
                       .tween(startLeft - 50)
 
-    const mover = playback(moveTo)
+    const mover = play(moveTo)
                       .on('tick', left => {
                         widget.style.left = left + 'px';
                       })

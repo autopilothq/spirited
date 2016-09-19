@@ -64,6 +64,7 @@
     "json-loader": "^0.5.3",
     "leasot": "^4.0.1",
     "lodash.merge": "^4.6.0",
+    "minimist": "^1.2.0",
     "mocha": "^3.0.2",
     "mocha-clean": "^1.0.0",
     "prettyjson": "^1.1.3",

@@ -137,14 +137,13 @@ describe('Playback: Stopping', function() {
   });
 
   describe('stop', function() {
-    let onComplete, entity, playback, startedAt;
+    let onComplete, playback, startedAt;
 
     beforeEach(function() {
       onComplete = sinon.stub();
-      entity = sinon.spy();
       startedAt = present();
 
-      playback = new Playback(anim, entity, {gracefulStop: false})
+      playback = new Playback(anim, {gracefulStop: false})
         .on('end', onComplete)
         .start(startedAt);
 
@@ -152,7 +151,7 @@ describe('Playback: Stopping', function() {
       playback.stop();
     });
 
-    it('calls the onComplete callback', function() {
+    it('emits the "end" event', function() {
       expect(onComplete).to.have.been.called;
     });
   });

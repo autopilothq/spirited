@@ -36,7 +36,6 @@ export default class PlaybackGroup extends EventEmitter {
    * Playback constructor.
    *
    * @param  {Playback} playbacks   The Playbacks to play
-   * @param  {Array} entities       Related entities that will be passed to the onTick callback
    * @param  {Object} [options={}]  See {@link defaultOptions} for the valid options
    * @return {PlaybackGroup}        The new PlaybackGroup
    *
